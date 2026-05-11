@@ -1,15 +1,14 @@
+/**
+ * app.ts — экспортирует Express-приложение без запуска сервера.
+ * Используется в интеграционных тестах (Jest + Supertest).
+ */
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import path from "path";
-import swaggerUi from "swagger-ui-express";
-import { initDB } from "./src/db";
 import { login } from "./src/middleware/auth";
-import { swaggerSpec } from "./src/swagger";
-import logger from "./src/lib/logger";
-import httpLogger from "./src/middleware/httpLogger";
 import productsRouter from "./src/routes/products";
 import adminsRouter from "./src/routes/admins";
 import usersRouter from "./src/routes/users";
@@ -25,23 +24,17 @@ import inventoryRouter from "./src/routes/inventory";
 import storeRouter from "./src/routes/store";
 import promoCodesRouter from "./src/routes/promo-codes";
 import checkoutMethodsRouter from "./src/routes/checkout-methods";
-import uploadRouter from "./src/routes/upload";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
 // Security headers
 app.use(helmet());
 
-app.use(cors({
-  origin: ["http://localhost:8080", "http://localhost:5173", "http://localhost:3000"],
-  credentials: true,
-}));
+app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use(httpLogger);
 
 // Brute-force protection: max 5 login attempts per IP per minute
 const loginRateLimiter = rateLimit({
@@ -71,28 +64,10 @@ app.use("/api/inventory", inventoryRouter);
 app.use("/api/store", storeRouter);
 app.use("/api/promo-codes", promoCodesRouter);
 app.use("/api/checkout-methods", checkoutMethodsRouter);
-app.use("/api/upload", uploadRouter);
-
-// Swagger UI
-app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.get("/api/docs.json", (_req, res) => {
-  res.setHeader("Content-Type", "application/json");
-  res.send(swaggerSpec);
-});
 
 // Health check
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Start
-initDB()
-  .then(() => {
-    app.listen(PORT, () => {
-      logger.info(`🚀 Admin API server running on http://localhost:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    logger.error("❌ Failed to initialize database", { error: err });
-    process.exit(1);
-  });
+export default app;
