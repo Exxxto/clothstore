@@ -20,6 +20,7 @@ export type PublicProductRow = {
   sizes: string[];
   description: string;
   material: string | null;
+  total_stock: number;
   created_at: string;
   updated_at: string;
 };
@@ -58,6 +59,7 @@ export function mapPublicProduct(row: PublicProductRow): Product {
     sizes: Array.isArray(row.sizes) ? row.sizes : [],
     description: row.description || "",
     material: row.material ?? undefined,
+    inStock: row.total_stock > 0,
   };
 }
 

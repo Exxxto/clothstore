@@ -15,6 +15,7 @@ export interface Product {
   sizes: string[];
   description: string;
   material?: string;
+  inStock?: boolean;
 }
 
 export const genderLabels: Record<Gender, string> = {

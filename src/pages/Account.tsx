@@ -17,6 +17,7 @@ import {
   Pencil,
   Plus,
   Star,
+  CreditCard,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -53,10 +54,14 @@ import {
   apiSetDefaultAccountAddress,
   apiUpdateAccountProfile,
   apiUpdateAccountAddress,
+  apiAddAccountCard,
+  apiDeleteAccountCard,
+  apiSetDefaultAccountCard,
   type StoreAddress,
   type StoreAddressPayload,
   type StoreOrderSummary,
   type StoreProfile,
+  type StoreSavedCard,
 } from "@/lib/storeApi";
 
 type UserProfile = StoreProfile;
@@ -67,7 +72,7 @@ type UserOrder = StoreOrderSummary & {
 
 type OrderStatusFilter = UserOrder["status"] | "all";
 type OrderSort = "newest" | "oldest" | "amount-high" | "amount-low";
-type AccountTab = "profile" | "addresses" | "security" | "favorites";
+type AccountTab = "profile" | "addresses" | "cards" | "security" | "favorites";
 type AddressDraft = {
   label: string;
   customer_name: string;
@@ -81,6 +86,15 @@ type AddressDraft = {
   is_default: boolean;
 };
 
+type CardDraft = {
+  label: string;
+  cardholder_name: string;
+  card_number: string;
+  expiry: string;
+  cvv: string;
+  is_default: boolean;
+};
+
 const initialProfile: UserProfile = {
   id: null,
   session_id: "",
@@ -90,6 +104,7 @@ const initialProfile: UserProfile = {
   email: "",
   phone: null,
   avatar_url: null,
+  saved_cards: [],
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
@@ -104,7 +119,7 @@ const emptyOrderState: Record<UserOrder["status"], number> = {
 };
 
 function resolveAccountTab(value: string | null): AccountTab {
-  if (value === "addresses" || value === "security" || value === "favorites") {
+  if (value === "addresses" || value === "cards" || value === "security" || value === "favorites") {
     return value;
   }
 
@@ -219,6 +234,18 @@ const Account = () => {
   const [addressDraft, setAddressDraft] = useState<AddressDraft>(() => createAddressDraft(initialProfile));
   const [addressSaving, setAddressSaving] = useState(false);
   const [addressBusyId, setAddressBusyId] = useState<number | null>(null);
+  const [cards, setCards] = useState<StoreSavedCard[]>([]);
+  const [cardDialogOpen, setCardDialogOpen] = useState(false);
+  const [cardDraft, setCardDraft] = useState<CardDraft>({
+    label: "",
+    cardholder_name: "",
+    card_number: "",
+    expiry: "",
+    cvv: "",
+    is_default: false,
+  });
+  const [cardSaving, setCardSaving] = useState(false);
+  const [cardBusyId, setCardBusyId] = useState<string | null>(null);
   const [recentOrders, setRecentOrders] = useState<UserOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileSaving, setProfileSaving] = useState(false);
@@ -247,6 +274,7 @@ const Account = () => {
         setProfile(profilePayload.profile);
         setDraft(profilePayload.profile);
         setAddresses(profilePayload.addresses);
+        setCards(profilePayload.profile.saved_cards ?? []);
         setRecentOrders(orderRows as UserOrder[]);
       })
       .catch((error) => {
@@ -526,6 +554,87 @@ const Account = () => {
     }
   };
 
+  const openAddCardDialog = () => {
+    setCardDraft({
+      label: "",
+      cardholder_name: getFullName(profile),
+      card_number: "",
+      expiry: "",
+      cvv: "",
+      is_default: cards.length === 0,
+    });
+    setCardDialogOpen(true);
+  };
+
+  const handleCardFieldChange = (field: keyof CardDraft, value: string | boolean) => {
+    setCardDraft((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleSaveCard = async () => {
+    const last4 = cardDraft.card_number.replace(/\s/g, "").slice(-4);
+    if (!/^\d{4}$/.test(last4)) {
+      toast.error("Введите корректный номер карты");
+      return;
+    }
+    if (!/^\d{2}\/\d{2}$/.test(cardDraft.expiry)) {
+      toast.error("Введите срок действия в формате ММ/ГГ");
+      return;
+    }
+
+    const rawNumber = cardDraft.card_number.replace(/\s/g, "");
+    let brand = "card";
+    if (/^4/.test(rawNumber)) brand = "visa";
+    else if (/^5[1-5]/.test(rawNumber) || /^2[2-7]/.test(rawNumber)) brand = "mastercard";
+    else if (/^3[47]/.test(rawNumber)) brand = "amex";
+    else if (/^2200/.test(rawNumber) || /^2201/.test(rawNumber) || /^2202/.test(rawNumber)) brand = "mir";
+
+    setCardSaving(true);
+    try {
+      const rows = await apiAddAccountCard({
+        last4,
+        brand,
+        expiry: cardDraft.expiry,
+        cardholder_name: cardDraft.cardholder_name.trim(),
+        label: cardDraft.label.trim(),
+        is_default: cardDraft.is_default,
+      });
+      setCards(rows);
+      setCardDialogOpen(false);
+      toast.success("Карта добавлена");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Не удалось добавить карту");
+    } finally {
+      setCardSaving(false);
+    }
+  };
+
+  const handleSetDefaultCard = async (cardId: string) => {
+    setCardBusyId(cardId);
+    try {
+      const rows = await apiSetDefaultAccountCard(cardId);
+      setCards(rows);
+      toast.success("Карта по умолчанию обновлена");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Не удалось выбрать карту");
+    } finally {
+      setCardBusyId(null);
+    }
+  };
+
+  const handleDeleteCard = async (card: StoreSavedCard) => {
+    if (!window.confirm("Удалить эту карту?")) return;
+    setCardBusyId(card.id);
+    try {
+      const rows = await apiDeleteAccountCard(card.id);
+      setCards(rows);
+      toast.success("Карта удалена");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Не удалось удалить карту");
+    } finally {
+      setCardBusyId(null);
+    }
+  };
+
   const handleSecuritySave = () => {
     if (!securityDraft.currentPassword || !securityDraft.newPassword || !securityDraft.confirmPassword) {
       toast.error("Заполните все поля для смены пароля");
@@ -603,12 +712,15 @@ const Account = () => {
               </div>
 
               <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-muted p-1">
+                <TabsList className="grid w-full grid-cols-5 rounded-2xl bg-muted p-1">
                   <TabsTrigger value="profile" className="rounded-xl">
                     Профиль
                   </TabsTrigger>
                   <TabsTrigger value="addresses" className="rounded-xl">
                     Адреса
+                  </TabsTrigger>
+                  <TabsTrigger value="cards" className="rounded-xl">
+                    Карты
                   </TabsTrigger>
                   <TabsTrigger value="favorites" className="rounded-xl">
                     Избранное
@@ -861,6 +973,107 @@ const Account = () => {
                           <Button type="button" className="mt-6 rounded-full" onClick={openCreateAddressDialog}>
                             <Plus size={16} />
                             Добавить адрес
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="cards" className="mt-6">
+                  <Card className="border-border/70">
+                    <CardHeader className="pb-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <CardTitle className="text-lg font-light">Сохранённые карты</CardTitle>
+                          <CardDescription>
+                            Добавляйте карты для быстрой оплаты при оформлении заказа
+                          </CardDescription>
+                        </div>
+                        <Button type="button" className="rounded-full" onClick={openAddCardDialog}>
+                          <Plus size={16} />
+                          Добавить карту
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-5">
+                      {loading ? (
+                        <div className="rounded-3xl border border-dashed border-border bg-card px-6 py-12 text-center text-sm text-muted-foreground">
+                          Загрузка карт...
+                        </div>
+                      ) : cards.length > 0 ? (
+                        <div className="grid gap-4 xl:grid-cols-2">
+                          {cards.map((card) => (
+                            <Card key={card.id} className="border-border/70 bg-background">
+                              <CardContent className="space-y-4 p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0 space-y-2">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <p className="text-base font-medium">
+                                        {card.label || `•••• ${card.last4}`}
+                                      </p>
+                                      {card.is_default ? (
+                                        <Badge variant="secondary" className="rounded-full">
+                                          По умолчанию
+                                        </Badge>
+                                      ) : null}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground capitalize">{card.brand}</p>
+                                  </div>
+                                  <div className="flex shrink-0 gap-1">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      className="rounded-full"
+                                      onClick={() => void handleDeleteCard(card)}
+                                      disabled={cardBusyId === card.id}
+                                    >
+                                      <Trash2 size={16} />
+                                    </Button>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+                                  <div className="flex items-center gap-3">
+                                    <CreditCard size={18} className="shrink-0 text-muted-foreground" />
+                                    <div>
+                                      <p className="text-sm font-medium">•••• •••• •••• {card.last4}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {card.cardholder_name || "Держатель не указан"} · Действует до {card.expiry}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-wrap gap-2">
+                                  <Button
+                                    type="button"
+                                    variant={card.is_default ? "secondary" : "outline"}
+                                    className="rounded-full"
+                                    onClick={() => void handleSetDefaultCard(card.id)}
+                                    disabled={card.is_default || cardBusyId === card.id}
+                                  >
+                                    <Star size={16} className={card.is_default ? "fill-current" : ""} />
+                                    {card.is_default ? "Выбрана по умолчанию" : "Сделать основной"}
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-3xl border border-dashed border-border bg-card px-6 py-12 text-center">
+                          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-border bg-background">
+                            <CreditCard size={22} className="text-muted-foreground" />
+                          </div>
+                          <h3 className="text-lg font-light text-foreground">Карт пока нет</h3>
+                          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                            Добавьте карту, чтобы быстрее оплачивать следующие заказы.
+                          </p>
+                          <Button type="button" className="mt-6 rounded-full" onClick={openAddCardDialog}>
+                            <Plus size={16} />
+                            Добавить карту
                           </Button>
                         </div>
                       )}
@@ -1177,6 +1390,107 @@ const Account = () => {
                     </Button>
                     <Button type="button" onClick={() => void handleSaveAddress()} disabled={addressSaving}>
                       {addressSaving ? "Сохранение..." : "Сохранить адрес"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Card Dialog */}
+              <Dialog
+                open={cardDialogOpen}
+                onOpenChange={(open) => {
+                  if (!cardSaving) setCardDialogOpen(open);
+                }}
+              >
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Новая карта</DialogTitle>
+                    <DialogDescription>
+                      Данные карты не передаются платёжному провайдеру — сохраняются только последние 4 цифры и срок действия.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="card_label">Метка</Label>
+                      <Input
+                        id="card_label"
+                        value={cardDraft.label}
+                        onChange={(e) => handleCardFieldChange("label", e.target.value)}
+                        placeholder="Основная, рабочая..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="card_cardholder">Имя держателя</Label>
+                      <Input
+                        id="card_cardholder"
+                        value={cardDraft.cardholder_name}
+                        onChange={(e) => handleCardFieldChange("cardholder_name", e.target.value)}
+                        placeholder="IVAN IVANOV"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="card_number">Номер карты *</Label>
+                      <Input
+                        id="card_number"
+                        value={cardDraft.card_number}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\s/g, "").replace(/(.{4})/g, "$1 ").trim();
+                          if (value.length <= 19) handleCardFieldChange("card_number", value);
+                        }}
+                        placeholder="4242 4242 4242 4242"
+                        maxLength={19}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="card_expiry">Срок действия *</Label>
+                        <Input
+                          id="card_expiry"
+                          value={cardDraft.expiry}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, "").replace(/(\d{2})(\d{1,2})/, "$1/$2");
+                            if (value.length <= 5) handleCardFieldChange("expiry", value);
+                          }}
+                          placeholder="ММ/ГГ"
+                          maxLength={5}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="card_cvv">CVV</Label>
+                        <Input
+                          id="card_cvv"
+                          value={cardDraft.cvv}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, "");
+                            if (value.length <= 3) handleCardFieldChange("cvv", value);
+                          }}
+                          placeholder="123"
+                          maxLength={3}
+                          type="password"
+                        />
+                      </div>
+                    </div>
+                    <label className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
+                      <Checkbox
+                        checked={cardDraft.is_default}
+                        onCheckedChange={(checked) => handleCardFieldChange("is_default", checked === true)}
+                      />
+                      <span className="text-sm font-medium">Использовать по умолчанию</span>
+                    </label>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCardDialogOpen(false)}
+                      disabled={cardSaving}
+                    >
+                      Отмена
+                    </Button>
+                    <Button type="button" onClick={() => void handleSaveCard()} disabled={cardSaving}>
+                      {cardSaving ? "Сохранение..." : "Сохранить карту"}
                     </Button>
                   </div>
                 </DialogContent>

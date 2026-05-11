@@ -18,10 +18,12 @@ import {
   type StoreAddress,
   type StorePaymentMethod,
   type StoreShippingMethod,
+  type StoreSavedCard,
 } from "@/lib/storeApi";
 import { useCart } from "@/hooks/useCart";
 
 const manualAddressValue = "manual";
+const manualCardValue = "manual";
 
 const fallbackShippingMethods: StoreShippingMethod[] = [
   {
@@ -70,7 +72,7 @@ const fallbackPaymentMethods: StorePaymentMethod[] = [
 ];
 
 function formatSavedAddress(address: StoreAddress) {
-  return [address.address_line1, address.city, address.postal_code, address.country].filter(Boolean).join(", ");
+  return [address.address_line1, address.address_line2, address.city, address.postal_code, address.country].filter(Boolean).join(", ");
 }
 
 function splitAddressCustomerName(customerName: string) {
@@ -110,11 +112,14 @@ const Checkout = () => {
   });
   const [shippingAddress, setShippingAddress] = useState({
     address: "",
+    addressLine2: "",
     city: "",
     postalCode: "",
     country: ""
   });
   const [savedAddresses, setSavedAddresses] = useState<StoreAddress[]>([]);
+  const [savedCards, setSavedCards] = useState<StoreSavedCard[]>([]);
+  const [selectedCardId, setSelectedCardId] = useState(manualCardValue);
   const [selectedAddressId, setSelectedAddressId] = useState(manualAddressValue);
   const [saveShippingAddress, setSaveShippingAddress] = useState(true);
   const [hasSeparateBilling, setHasSeparateBilling] = useState(false);
@@ -124,6 +129,7 @@ const Checkout = () => {
     email: "",
     phone: "",
     address: "",
+    addressLine2: "",
     city: "",
     postalCode: "",
     country: ""
@@ -150,6 +156,7 @@ const Checkout = () => {
 
     setShippingAddress({
       address: address.address_line1,
+      addressLine2: address.address_line2 || "",
       city: address.city || "",
       postalCode: address.postal_code || "",
       country: address.country || "",
@@ -172,6 +179,7 @@ const Checkout = () => {
       lastName: name.lastName || customerDetails.lastName,
       phone: address.phone || customerDetails.phone,
       address: address.address_line1,
+      addressLine2: address.address_line2 || "",
       city: address.city || "",
       postalCode: address.postal_code || "",
       country: address.country || "",
@@ -201,6 +209,7 @@ const Checkout = () => {
 
         const profile = account.profile;
         setSavedAddresses(account.addresses);
+        setSavedCards(profile.saved_cards ?? []);
         setCustomerDetails((current) => ({
           email: current.email || profile.email || "",
           firstName: current.firstName || profile.first_name || "",
@@ -212,6 +221,11 @@ const Checkout = () => {
         if (defaultAddress) {
           setSelectedAddressId(String(defaultAddress.id));
           applySavedAddress(defaultAddress);
+        }
+
+        const defaultCard = (profile.saved_cards ?? []).find((c) => c.is_default) ?? (profile.saved_cards ?? [])[0];
+        if (defaultCard) {
+          setSelectedCardId(defaultCard.id);
         }
       })
       .catch((error) => {
@@ -300,6 +314,14 @@ const Checkout = () => {
     setPaymentDetails(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleSavedCardChange = (value: string) => {
+    setSelectedCardId(value);
+    if (value !== manualCardValue) {
+      // Clear manual card fields when a saved card is selected
+      setPaymentDetails({ cardNumber: "", expiryDate: "", cvv: "", cardholderName: "" });
+    }
+  };
+
   const validateCheckoutForm = () => {
     if (!customerDetails.email.trim() || !customerDetails.firstName.trim() || !customerDetails.lastName.trim()) {
       toast.error("Заполните email, имя и фамилию покупателя");
@@ -321,12 +343,13 @@ const Checkout = () => {
 
     if (
       cardPaymentRequired &&
+      selectedCardId === manualCardValue &&
       (!paymentDetails.cardNumber.trim() ||
         !paymentDetails.expiryDate.trim() ||
         !paymentDetails.cvv.trim() ||
         !paymentDetails.cardholderName.trim())
     ) {
-      toast.error("Заполните данные карты или выберите оплату при получении");
+      toast.error("Заполните данные карты или выберите сохранённую карту");
       return false;
     }
 
@@ -351,6 +374,7 @@ const Checkout = () => {
         },
         shipping_address: {
           address_line1: shippingAddress.address,
+          address_line2: shippingAddress.addressLine2 || undefined,
           city: shippingAddress.city,
           postal_code: shippingAddress.postalCode,
           country: shippingAddress.country,
@@ -362,6 +386,7 @@ const Checkout = () => {
               email: billingDetails.email,
               phone: billingDetails.phone,
               address_line1: billingDetails.address,
+              address_line2: billingDetails.addressLine2 || undefined,
               city: billingDetails.city,
               postal_code: billingDetails.postalCode,
               country: billingDetails.country,
@@ -511,6 +536,10 @@ const Checkout = () => {
                       <Label htmlFor="shippingAddress" className="text-sm font-light text-foreground">Адрес *</Label>
                       <Input id="shippingAddress" type="text" value={shippingAddress.address} onChange={(e) => handleShippingAddressChange("address", e.target.value)} className="mt-2 rounded-2xl bg-background/70" placeholder="Улица, дом, квартира" />
                     </div>
+                    <div>
+                      <Label htmlFor="shippingAddressLine2" className="text-sm font-light text-foreground">Дополнение</Label>
+                      <Input id="shippingAddressLine2" type="text" value={shippingAddress.addressLine2} onChange={(e) => handleShippingAddressChange("addressLine2", e.target.value)} className="mt-2 rounded-2xl bg-background/70" placeholder="Подъезд, этаж, домофон" />
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="shippingCity" className="text-sm font-light text-foreground">Город *</Label>
@@ -617,6 +646,10 @@ const Checkout = () => {
                     <div>
                       <Label htmlFor="billingAddress" className="text-sm font-light text-foreground">Адрес *</Label>
                       <Input id="billingAddress" type="text" value={billingDetails.address} onChange={(e) => handleBillingDetailsChange("address", e.target.value)} className="mt-2 rounded-2xl bg-background/70" placeholder="Улица, дом, квартира" />
+                    </div>
+                    <div>
+                      <Label htmlFor="billingAddressLine2" className="text-sm font-light text-foreground">Дополнение</Label>
+                      <Input id="billingAddressLine2" type="text" value={billingDetails.addressLine2} onChange={(e) => handleBillingDetailsChange("addressLine2", e.target.value)} className="mt-2 rounded-2xl bg-background/70" placeholder="Подъезд, этаж, домофон" />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -734,27 +767,86 @@ const Checkout = () => {
                           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                             Mock-оплата: эти поля нужны только для тестового сценария. Данные карты не отправляются платёжному провайдеру, а заказ будет отмечен как оплаченный через `mock-card`.
                           </div>
-                          <div>
-                            <Label htmlFor="cardholderName" className="text-sm font-light text-foreground">Имя держателя карты *</Label>
-                            <Input id="cardholderName" type="text" value={paymentDetails.cardholderName} onChange={(e) => handlePaymentDetailsChange("cardholderName", e.target.value)} className="mt-2 rounded-2xl bg-background/70" placeholder="Имя на карте" />
-                          </div>
-                          <div>
-                            <Label htmlFor="cardNumber" className="text-sm font-light text-foreground">Номер карты *</Label>
-                            <div className="relative mt-2">
-                              <Input id="cardNumber" type="text" value={paymentDetails.cardNumber} onChange={(e) => { const value = e.target.value.replace(/\s/g, "").replace(/(.{4})/g, "$1 ").trim(); if (value.length <= 19) handlePaymentDetailsChange("cardNumber", value); }} className="rounded-2xl bg-background/70 pl-10" placeholder="4242 4242 4242 4242" maxLength={19} />
-                              <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+
+                          {savedCards.length > 0 && (
+                            <div className="rounded-2xl border border-border bg-background/60 p-4 space-y-4">
+                              <div className="flex items-start gap-3">
+                                <div className="mt-0.5 rounded-full border border-border p-2">
+                                  <CreditCard size={16} strokeWidth={1.6} />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground">Сохранённые карты</div>
+                                  <div className="text-xs text-muted-foreground">Выберите карту из личного кабинета или введите новую.</div>
+                                </div>
+                              </div>
+
+                              <RadioGroup value={selectedCardId} onValueChange={handleSavedCardChange} className="grid gap-3">
+                                {savedCards.map((card) => (
+                                  <label
+                                    key={card.id}
+                                    className="flex items-start gap-3 rounded-2xl border border-border bg-background/70 p-4 cursor-pointer hover:border-foreground/30 transition-colors"
+                                  >
+                                    <RadioGroupItem value={card.id} id={`saved_card_${card.id}`} className="mt-1" />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <span className="text-sm font-medium text-foreground">
+                                          {card.label || `•••• ${card.last4}`}
+                                        </span>
+                                        {card.is_default ? (
+                                          <span className="rounded-full bg-foreground px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-background">
+                                            По умолчанию
+                                          </span>
+                                        ) : null}
+                                      </div>
+                                      <div className="mt-1 text-xs text-muted-foreground capitalize">
+                                        {card.brand} •••• {card.last4} · до {card.expiry}
+                                      </div>
+                                      {card.cardholder_name ? (
+                                        <div className="mt-0.5 text-xs text-muted-foreground">{card.cardholder_name}</div>
+                                      ) : null}
+                                    </div>
+                                  </label>
+                                ))}
+
+                                <label className="flex items-center gap-3 rounded-2xl border border-dashed border-border bg-background/50 p-4 cursor-pointer hover:border-foreground/30 transition-colors">
+                                  <RadioGroupItem value={manualCardValue} id="saved_card_manual" />
+                                  <span className="text-sm text-foreground">Ввести данные карты вручную</span>
+                                </label>
+                              </RadioGroup>
                             </div>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="expiryDate" className="text-sm font-light text-foreground">Срок действия *</Label>
-                              <Input id="expiryDate" type="text" value={paymentDetails.expiryDate} onChange={(e) => { const value = e.target.value.replace(/\D/g, "").replace(/(\d{2})(\d{2})/, "$1/$2"); if (value.length <= 5) handlePaymentDetailsChange("expiryDate", value); }} className="mt-2 rounded-2xl bg-background/70" placeholder="ММ/ГГ" maxLength={5} />
+                          )}
+
+                          {selectedCardId === manualCardValue && (
+                            <>
+                              <div>
+                                <Label htmlFor="cardholderName" className="text-sm font-light text-foreground">Имя держателя карты *</Label>
+                                <Input id="cardholderName" type="text" value={paymentDetails.cardholderName} onChange={(e) => handlePaymentDetailsChange("cardholderName", e.target.value)} className="mt-2 rounded-2xl bg-background/70" placeholder="Имя на карте" />
+                              </div>
+                              <div>
+                                <Label htmlFor="cardNumber" className="text-sm font-light text-foreground">Номер карты *</Label>
+                                <div className="relative mt-2">
+                                  <Input id="cardNumber" type="text" value={paymentDetails.cardNumber} onChange={(e) => { const value = e.target.value.replace(/\s/g, "").replace(/(.{4})/g, "$1 ").trim(); if (value.length <= 19) handlePaymentDetailsChange("cardNumber", value); }} className="rounded-2xl bg-background/70 pl-10" placeholder="4242 4242 4242 4242" maxLength={19} />
+                                  <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <Label htmlFor="expiryDate" className="text-sm font-light text-foreground">Срок действия *</Label>
+                                  <Input id="expiryDate" type="text" value={paymentDetails.expiryDate} onChange={(e) => { const value = e.target.value.replace(/\D/g, "").replace(/(\d{2})(\d{2})/, "$1/$2"); if (value.length <= 5) handlePaymentDetailsChange("expiryDate", value); }} className="mt-2 rounded-2xl bg-background/70" placeholder="ММ/ГГ" maxLength={5} />
+                                </div>
+                                <div>
+                                  <Label htmlFor="cvv" className="text-sm font-light text-foreground">CVV *</Label>
+                                  <Input id="cvv" type="text" value={paymentDetails.cvv} onChange={(e) => { const value = e.target.value.replace(/\D/g, ""); if (value.length <= 3) handlePaymentDetailsChange("cvv", value); }} className="mt-2 rounded-2xl bg-background/70" placeholder="123" maxLength={3} />
+                                </div>
+                              </div>
+                            </>
+                          )}
+
+                          {selectedCardId !== manualCardValue && (
+                            <div className="rounded-2xl border border-border bg-background/60 p-4 text-sm text-muted-foreground">
+                              Будет использована выбранная сохранённая карта.
                             </div>
-                            <div>
-                              <Label htmlFor="cvv" className="text-sm font-light text-foreground">CVV *</Label>
-                              <Input id="cvv" type="text" value={paymentDetails.cvv} onChange={(e) => { const value = e.target.value.replace(/\D/g, ""); if (value.length <= 3) handlePaymentDetailsChange("cvv", value); }} className="mt-2 rounded-2xl bg-background/70" placeholder="123" maxLength={3} />
-                            </div>
-                          </div>
+                          )}
                         </>
                       ) : (
                         <div className="rounded-2xl border border-border bg-background/70 p-4 text-sm text-muted-foreground">
@@ -789,6 +881,7 @@ const Checkout = () => {
                           isProcessing ||
                           cartItems.length === 0 ||
                           (cardPaymentRequired &&
+                            selectedCardId === manualCardValue &&
                             (!paymentDetails.cardNumber ||
                               !paymentDetails.expiryDate ||
                               !paymentDetails.cvv ||

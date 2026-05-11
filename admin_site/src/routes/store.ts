@@ -95,9 +95,32 @@ function splitCustomerName(fullName: string | null) {
   };
 }
 
+type SavedCard = {
+  id: string;
+  label: string;
+  last4: string;
+  brand: string;
+  expiry: string;
+  cardholder_name: string;
+  is_default: boolean;
+};
+
+function normalizeSavedCards(raw: unknown): SavedCard[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(
+    (c): c is SavedCard =>
+      c !== null &&
+      typeof c === "object" &&
+      typeof c.id === "string" &&
+      typeof c.last4 === "string" &&
+      typeof c.brand === "string" &&
+      typeof c.expiry === "string"
+  );
+}
+
 async function getStoreProfile(sessionId: string) {
   const { rows } = await pool.query(
-    `SELECT id, session_id, last_name, first_name, middle_name, email, phone, avatar_url, created_at, updated_at
+    `SELECT id, session_id, last_name, first_name, middle_name, email, phone, avatar_url, saved_cards, created_at, updated_at
      FROM store_profiles
      WHERE session_id = $1
      LIMIT 1`,
@@ -105,7 +128,7 @@ async function getStoreProfile(sessionId: string) {
   );
 
   if (rows.length > 0) {
-    return rows[0];
+    return { ...rows[0], saved_cards: normalizeSavedCards(rows[0].saved_cards) };
   }
 
   const { rows: orderRows } = await pool.query(
@@ -126,6 +149,7 @@ async function getStoreProfile(sessionId: string) {
       email: orderRows[0].email,
       phone: orderRows[0].phone,
       avatar_url: null,
+      saved_cards: [] as SavedCard[],
       created_at: orderRows[0].created_at,
       updated_at: orderRows[0].updated_at,
     };
@@ -140,6 +164,7 @@ async function getStoreProfile(sessionId: string) {
     email: "",
     phone: null,
     avatar_url: null,
+    saved_cards: [] as SavedCard[],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -430,7 +455,7 @@ async function buildCartResponse(sessionId: string) {
   };
 }
 
-async function validatePromoCode(code: string, subtotal: number) {
+async function validatePromoCode(code: string, subtotal: number, sessionId?: string) {
   const normalizedCode = code.trim().toUpperCase();
   if (!normalizedCode) return null;
 
@@ -476,6 +501,19 @@ async function validatePromoCode(code: string, subtotal: number) {
   }
   if (promo.usage_limit !== null && promo.usage_count >= promo.usage_limit) {
     return { ok: false, error: "Промокод исчерпал лимит использования" } as const;
+  }
+
+  // Проверяем, не использовал ли этот сеанс промокод ранее
+  if (sessionId) {
+    const { rows: redemptionRows } = await pool.query<{ id: number }>(
+      `SELECT id FROM promo_code_redemptions
+       WHERE promo_code_id = $1 AND session_id = $2
+       LIMIT 1`,
+      [promo.id, sessionId]
+    );
+    if (redemptionRows.length > 0) {
+      return { ok: false, error: "Вы уже использовали этот промокод" } as const;
+    }
   }
 
   let discountAmount = 0;
@@ -847,6 +885,154 @@ router.delete("/account/addresses/:addressId", async (req: Request, res: Respons
   }
 });
 
+// ---------------------------------------------------------------------------
+// Saved cards (stored as JSONB in store_profiles.saved_cards)
+// ---------------------------------------------------------------------------
+
+router.get("/account/cards", async (req: Request, res: Response) => {
+  const sessionId = normalizeSessionId(req.query.session_id);
+  if (!sessionId) {
+    return res.status(400).json({ error: "session_id обязателен" });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT saved_cards FROM store_profiles WHERE session_id = $1 LIMIT 1`,
+      [sessionId]
+    );
+    res.json(normalizeSavedCards(rows[0]?.saved_cards));
+  } catch (err) {
+    logger.error("Route error", { error: err });
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+router.post("/account/cards", async (req: Request, res: Response) => {
+  const sessionId = normalizeSessionId(req.body.session_id);
+  if (!sessionId) {
+    return res.status(400).json({ error: "session_id обязателен" });
+  }
+
+  const last4 = normalizeText(req.body.last4);
+  const brand = normalizeText(req.body.brand) || "card";
+  const expiry = normalizeText(req.body.expiry);
+  const cardholderName = normalizeText(req.body.cardholder_name);
+  const label = normalizeText(req.body.label) || "";
+  const isDefault = req.body.is_default === true;
+
+  if (!last4 || last4.length !== 4 || !/^\d{4}$/.test(last4)) {
+    return res.status(400).json({ error: "Укажите последние 4 цифры карты" });
+  }
+  if (!expiry || !/^\d{2}\/\d{2}$/.test(expiry)) {
+    return res.status(400).json({ error: "Укажите срок действия в формате ММ/ГГ" });
+  }
+
+  try {
+    const { rows: existing } = await pool.query(
+      `SELECT saved_cards FROM store_profiles WHERE session_id = $1 LIMIT 1`,
+      [sessionId]
+    );
+
+    let cards = normalizeSavedCards(existing[0]?.saved_cards);
+    const newCard: SavedCard = {
+      id: `card-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+      label,
+      last4,
+      brand,
+      expiry,
+      cardholder_name: cardholderName,
+      is_default: isDefault || cards.length === 0,
+    };
+
+    if (newCard.is_default) {
+      cards = cards.map((c) => ({ ...c, is_default: false }));
+    }
+    cards.push(newCard);
+
+    await pool.query(
+      `INSERT INTO store_profiles (session_id, saved_cards, updated_at)
+       VALUES ($1, $2::jsonb, NOW())
+       ON CONFLICT (session_id)
+       DO UPDATE SET saved_cards = $2::jsonb, updated_at = NOW()`,
+      [sessionId, JSON.stringify(cards)]
+    );
+
+    res.status(201).json(cards);
+  } catch (err) {
+    logger.error("Route error", { error: err });
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+router.patch("/account/cards/:cardId/default", async (req: Request, res: Response) => {
+  const sessionId = normalizeSessionId(req.body.session_id);
+  const cardId = normalizeText(req.params.cardId);
+
+  if (!sessionId || !cardId) {
+    return res.status(400).json({ error: "Укажите session_id и card_id" });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT saved_cards FROM store_profiles WHERE session_id = $1 LIMIT 1`,
+      [sessionId]
+    );
+
+    let cards = normalizeSavedCards(rows[0]?.saved_cards);
+    const target = cards.find((c) => c.id === cardId);
+    if (!target) {
+      return res.status(404).json({ error: "Карта не найдена" });
+    }
+
+    cards = cards.map((c) => ({ ...c, is_default: c.id === cardId }));
+
+    await pool.query(
+      `UPDATE store_profiles SET saved_cards = $1::jsonb, updated_at = NOW() WHERE session_id = $2`,
+      [JSON.stringify(cards), sessionId]
+    );
+
+    res.json(cards);
+  } catch (err) {
+    logger.error("Route error", { error: err });
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+router.delete("/account/cards/:cardId", async (req: Request, res: Response) => {
+  const sessionId = normalizeSessionId(req.query.session_id);
+  const cardId = normalizeText(req.params.cardId);
+
+  if (!sessionId || !cardId) {
+    return res.status(400).json({ error: "Укажите session_id и card_id" });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT saved_cards FROM store_profiles WHERE session_id = $1 LIMIT 1`,
+      [sessionId]
+    );
+
+    let cards = normalizeSavedCards(rows[0]?.saved_cards);
+    const wasDefault = cards.find((c) => c.id === cardId)?.is_default ?? false;
+    cards = cards.filter((c) => c.id !== cardId);
+
+    // Promote next card to default if deleted card was default
+    if (wasDefault && cards.length > 0) {
+      cards[0] = { ...cards[0], is_default: true };
+    }
+
+    await pool.query(
+      `UPDATE store_profiles SET saved_cards = $1::jsonb, updated_at = NOW() WHERE session_id = $2`,
+      [JSON.stringify(cards), sessionId]
+    );
+
+    res.json(cards);
+  } catch (err) {
+    logger.error("Route error", { error: err });
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
 router.get("/account/orders", async (req: Request, res: Response) => {
   const sessionId = normalizeSessionId(req.query.session_id);
   if (!sessionId) {
@@ -1124,13 +1310,14 @@ router.delete("/cart/items/:itemId", async (req: Request, res: Response) => {
 router.post("/promo-codes/validate", async (req: Request, res: Response) => {
   const code = normalizeText(req.body.code);
   const subtotal = Number(req.body.subtotal || 0);
+  const sessionId = normalizeSessionId(req.body.session_id);
 
   if (!code) {
     return res.status(400).json({ error: "Укажите промокод" });
   }
 
   try {
-    const result = await validatePromoCode(code, subtotal);
+    const result = await validatePromoCode(code, subtotal, sessionId || undefined);
     if (!result || !result.ok) {
       return res.status(400).json({ error: result?.error || "Промокод недоступен" });
     }
@@ -1292,7 +1479,7 @@ router.post("/checkout", async (req: Request, res: Response) => {
     let promoValidation: Awaited<ReturnType<typeof validatePromoCode>> | null = null;
     let discountAmount = 0;
     if (promoCode) {
-      promoValidation = await validatePromoCode(promoCode, subtotal);
+      promoValidation = await validatePromoCode(promoCode, subtotal, sessionId);
       if (!promoValidation || !promoValidation.ok) {
         throw new Error(promoValidation?.error || "Промокод недоступен");
       }
@@ -1379,6 +1566,64 @@ router.post("/checkout", async (req: Request, res: Response) => {
           item.size,
         ]
       );
+    }
+
+    // Списываем остатки со складов для каждой позиции заказа
+    for (const item of itemRows) {
+      if (!item.product_variant_id) continue;
+
+      // Берём склады с достаточным остатком, сортируем по убыванию количества
+      const { rows: stockRows } = await client.query<{
+        warehouse_id: number;
+        quantity_on_hand: number;
+      }>(
+        `SELECT warehouse_id, quantity_on_hand
+         FROM stock_balances
+         WHERE product_variant_id = $1
+           AND quantity_on_hand > 0
+         ORDER BY quantity_on_hand DESC
+         FOR UPDATE`,
+        [item.product_variant_id]
+      );
+
+      let remaining = item.quantity;
+      for (const stock of stockRows) {
+        if (remaining <= 0) break;
+        const deduct = Math.min(remaining, stock.quantity_on_hand);
+
+        await client.query(
+          `UPDATE stock_balances
+           SET quantity_on_hand = quantity_on_hand - $1,
+               updated_at = NOW()
+           WHERE warehouse_id = $2
+             AND product_variant_id = $3`,
+          [deduct, stock.warehouse_id, item.product_variant_id]
+        );
+
+        await client.query(
+          `INSERT INTO stock_movements (
+             warehouse_id,
+             product_variant_id,
+             movement_type,
+             quantity_delta,
+             quantity_after,
+             reason,
+             reference_type,
+             reference_id
+           )
+           VALUES ($1, $2, 'sale', $3, $4, 'Продажа через магазин', 'order', $5)`,
+          [
+            stock.warehouse_id,
+            item.product_variant_id,
+            -deduct,
+            stock.quantity_on_hand - deduct,
+            orderId,
+          ]
+        );
+
+        remaining -= deduct;
+      }
+      // Если остатков не хватило — продолжаем (не блокируем заказ, просто уходим в минус не даём)
     }
 
     await client.query(

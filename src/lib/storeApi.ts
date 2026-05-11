@@ -142,7 +142,7 @@ export async function apiValidatePromoCode(code: string, subtotal: number) {
   const response = await fetch("/api/store/promo-codes/validate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code, subtotal }),
+    body: JSON.stringify({ code, subtotal, session_id: getStoreSessionId() }),
   });
   return handleResponse<{
     code: string;
@@ -220,6 +220,16 @@ export async function apiCheckout(data: {
   }>(response);
 }
 
+export type StoreSavedCard = {
+  id: string;
+  label: string;
+  last4: string;
+  brand: string;
+  expiry: string;
+  cardholder_name: string;
+  is_default: boolean;
+};
+
 export type StoreProfile = {
   id: number | null;
   session_id: string;
@@ -229,6 +239,7 @@ export type StoreProfile = {
   email: string;
   phone: string | null;
   avatar_url: string | null;
+  saved_cards: StoreSavedCard[];
   created_at: string;
   updated_at: string;
 };
@@ -410,4 +421,53 @@ export async function apiSubmitProductReview(productId: number, data: {
     }),
   });
   return handleResponse<ProductReview>(response);
+}
+
+// ---------------------------------------------------------------------------
+// Saved Cards
+// ---------------------------------------------------------------------------
+
+export type StoreSavedCardPayload = {
+  last4: string;
+  brand: string;
+  expiry: string;
+  cardholder_name: string;
+  label?: string;
+  is_default?: boolean;
+};
+
+export async function apiGetAccountCards() {
+  const sessionId = getStoreSessionId();
+  const response = await fetch(`/api/store/account/cards?session_id=${encodeURIComponent(sessionId)}`);
+  return handleResponse<StoreSavedCard[]>(response);
+}
+
+export async function apiAddAccountCard(data: StoreSavedCardPayload) {
+  const response = await fetch("/api/store/account/cards", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_id: getStoreSessionId(),
+      ...data,
+    }),
+  });
+  return handleResponse<StoreSavedCard[]>(response);
+}
+
+export async function apiSetDefaultAccountCard(cardId: string) {
+  const response = await fetch(`/api/store/account/cards/${encodeURIComponent(cardId)}/default`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: getStoreSessionId() }),
+  });
+  return handleResponse<StoreSavedCard[]>(response);
+}
+
+export async function apiDeleteAccountCard(cardId: string) {
+  const sessionId = getStoreSessionId();
+  const response = await fetch(
+    `/api/store/account/cards/${encodeURIComponent(cardId)}?session_id=${encodeURIComponent(sessionId)}`,
+    { method: "DELETE" }
+  );
+  return handleResponse<StoreSavedCard[]>(response);
 }

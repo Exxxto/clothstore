@@ -48,9 +48,15 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
               <Sparkles size={13} strokeWidth={1.75} />
               {typeLabels[product.type]}
             </div>
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs uppercase tracking-[0.16em] text-green-700">
-              В наличии
-            </div>
+            {product.inStock === false ? (
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs uppercase tracking-[0.16em] text-red-600">
+                Нет в наличии
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs uppercase tracking-[0.16em] text-green-700">
+                В наличии
+              </div>
+            )}
           </div>
           <h1 className="text-3xl md:text-4xl font-light tracking-tight text-foreground">{product.name}</h1>
           <p className="text-sm text-muted-foreground max-w-md">

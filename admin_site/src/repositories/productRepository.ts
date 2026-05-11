@@ -8,45 +8,69 @@ export interface ProductFilters {
   material?: string;
 }
 
+const STOCK_JOIN = `
+  LEFT JOIN (
+    SELECT pv.product_id, COALESCE(SUM(sb.quantity_on_hand), 0)::int AS total_stock
+    FROM product_variants pv
+    LEFT JOIN stock_balances sb ON sb.product_variant_id = pv.id
+    WHERE pv.is_active = TRUE
+    GROUP BY pv.product_id
+  ) stock ON stock.product_id = p.id
+`;
+
 export async function findAllProducts(filters: ProductFilters = {}) {
-  let query = "SELECT * FROM products WHERE 1=1";
+  const conditions: string[] = [];
   const params: Array<string | number> = [];
   let idx = 1;
 
   if (filters.gender) {
-    query += ` AND CASE
-      WHEN LOWER(gender) IN ('men', 'male', 'man', 'мужское', 'мужские', 'мужской', 'для мужчин') THEN 'men'
-      WHEN LOWER(gender) IN ('women', 'female', 'woman', 'женское', 'женские', 'женский', 'для женщин') THEN 'women'
-      WHEN LOWER(gender) IN ('kids', 'child', 'children', 'детское', 'детские', 'детский', 'для детей') THEN 'kids'
-      ELSE LOWER(gender)
-    END = $${idx++}`;
+    conditions.push(`CASE
+      WHEN LOWER(p.gender) IN ('men', 'male', 'man', 'мужское', 'мужские', 'мужской', 'для мужчин') THEN 'men'
+      WHEN LOWER(p.gender) IN ('women', 'female', 'woman', 'женское', 'женские', 'женский', 'для женщин') THEN 'women'
+      WHEN LOWER(p.gender) IN ('kids', 'child', 'children', 'детское', 'детские', 'детский', 'для детей') THEN 'kids'
+      ELSE LOWER(p.gender)
+    END = $${idx++}`);
     params.push(filters.gender);
   }
   if (filters.type) {
-    query += ` AND type = $${idx++}`;
+    conditions.push(`p.type = $${idx++}`);
     params.push(filters.type);
   }
   if (filters.season) {
-    query += ` AND season = $${idx++}`;
+    conditions.push(`p.season = $${idx++}`);
     params.push(filters.season);
   }
   if (filters.material) {
-    query += ` AND LOWER(material) = LOWER($${idx++})`;
+    conditions.push(`LOWER(p.material) = LOWER($${idx++})`);
     params.push(filters.material);
   }
   if (filters.search) {
-    query += ` AND (name ILIKE $${idx} OR description ILIKE $${idx})`;
+    conditions.push(`(p.name ILIKE $${idx} OR p.description ILIKE $${idx})`);
     params.push(`%${filters.search}%`);
     idx++;
   }
 
-  query += " ORDER BY id ASC";
-  const { rows } = await pool.query(query, params);
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const { rows } = await pool.query(
+    `SELECT p.*, COALESCE(stock.total_stock, 0) AS total_stock
+     FROM products p
+     ${STOCK_JOIN}
+     ${whereClause}
+     ORDER BY p.id ASC`,
+    params
+  );
   return rows;
 }
 
 export async function findProductById(id: number) {
-  const { rows } = await pool.query("SELECT * FROM products WHERE id = $1", [id]);
+  const { rows } = await pool.query(
+    `SELECT p.*, COALESCE(stock.total_stock, 0) AS total_stock
+     FROM products p
+     ${STOCK_JOIN}
+     WHERE p.id = $1`,
+    [id]
+  );
   return rows[0] ?? null;
 }
 
