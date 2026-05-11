@@ -36,15 +36,22 @@
 ## 1. Create the database
 
 ```bash
-psql -U postgres -c "CREATE DATABASE siluet;"
+psql -U postgres -c "CREATE DATABASE silhouette;"
 ```
 
 ## 2. Configure environment
 
-Edit `.env` in the project root:
+Copy `.env.example` to `.env`:
+
+```bash
+cp .env.example .env   # Linux/Mac
+copy .env.example .env  # Windows
+```
+
+Or edit `.env` manually:
 
 ```env
-DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/siluet
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/silhouette
 JWT_SECRET=change_this_to_a_random_secret
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=admin123

@@ -16,6 +16,7 @@ dist-ssr
 .env
 .env.local
 .env.production
+# .env.example is intentionally NOT ignored — it's safe to commit
 
 # Editor directories and files
 .vscode/*
