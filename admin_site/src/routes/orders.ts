@@ -1,21 +1,13 @@
 import { Router, Request, Response } from "express";
+import logger from "../lib/logger";
 import { pool, logAuditAction } from "../db";
 import { requireAuth } from "../middleware/auth";
+import { validate } from "../middleware/validate";
+import { UpdateOrderStatusSchema, UpdateOrderPaymentSchema, UpdateOrderFulfillmentSchema } from "../schemas";
 
 const router = Router();
 
 router.use(requireAuth);
-
-const ALLOWED_STATUSES = new Set([
-  "new",
-  "confirmed",
-  "packing",
-  "shipped",
-  "completed",
-  "cancelled",
-]);
-
-const ALLOWED_PAYMENT_STATUSES = new Set(["pending", "paid", "failed", "refunded"]);
 
 router.get("/", async (req: Request, res: Response) => {
   const limit = Math.min(Number(req.query.limit || 100), 500);
@@ -107,7 +99,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -171,17 +163,13 @@ router.get("/:id", async (req: Request, res: Response) => {
       items_count: itemRows.length,
     });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-router.put("/:id/status", async (req: Request, res: Response) => {
+router.put("/:id/status", validate(UpdateOrderStatusSchema), async (req: Request, res: Response) => {
   const { status } = req.body;
-
-  if (!status || typeof status !== "string" || !ALLOWED_STATUSES.has(status)) {
-    return res.status(400).json({ error: "Укажите корректный статус заказа" });
-  }
 
   try {
     const { rows: existingRows } = await pool.query(
@@ -220,19 +208,15 @@ router.put("/:id/status", async (req: Request, res: Response) => {
 
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-router.put("/:id/payment", async (req: Request, res: Response) => {
-  const status = typeof req.body.payment_status === "string" ? req.body.payment_status : "";
+router.put("/:id/payment", validate(UpdateOrderPaymentSchema), async (req: Request, res: Response) => {
+  const status = req.body.payment_status as string;
   const provider = typeof req.body.payment_provider === "string" ? req.body.payment_provider.trim() : null;
   const reference = typeof req.body.payment_reference === "string" ? req.body.payment_reference.trim() : null;
-
-  if (!ALLOWED_PAYMENT_STATUSES.has(status)) {
-    return res.status(400).json({ error: "Укажите корректный статус оплаты" });
-  }
 
   try {
     const { rows } = await pool.query(
@@ -266,21 +250,17 @@ router.put("/:id/payment", async (req: Request, res: Response) => {
 
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-router.put("/:id/fulfillment", async (req: Request, res: Response) => {
+router.put("/:id/fulfillment", validate(UpdateOrderFulfillmentSchema), async (req: Request, res: Response) => {
   const carrier = typeof req.body.carrier === "string" ? req.body.carrier.trim() : null;
   const trackingNumber = typeof req.body.tracking_number === "string" ? req.body.tracking_number.trim() : null;
   const shippedAt = typeof req.body.shipped_at === "string" && req.body.shipped_at.trim()
     ? new Date(req.body.shipped_at)
     : null;
-
-  if (shippedAt && Number.isNaN(shippedAt.getTime())) {
-    return res.status(400).json({ error: "Укажите корректную дату отправки" });
-  }
 
   try {
     const { rows } = await pool.query(
@@ -309,7 +289,7 @@ router.put("/:id/fulfillment", async (req: Request, res: Response) => {
 
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });

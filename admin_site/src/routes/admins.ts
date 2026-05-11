@@ -1,7 +1,10 @@
 import { Router, Request, Response } from "express";
+import logger from "../lib/logger";
 import bcrypt from "bcryptjs";
 import { pool } from "../db";
 import { requireAuth } from "../middleware/auth";
+import { validate } from "../middleware/validate";
+import { CreateAdminSchema, UpdateAdminSchema, ChangePasswordSchema } from "../schemas";
 
 const router = Router();
 
@@ -16,7 +19,7 @@ router.get("/", async (_req: Request, res: Response) => {
     );
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -38,21 +41,14 @@ router.get("/me", async (req: Request, res: Response) => {
     if (rows.length === 0) return res.status(404).json({ error: "Не найден" });
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
 // POST /api/admins — создать
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", validate(CreateAdminSchema), async (req: Request, res: Response) => {
   const { last_name, first_name, middle_name, username, password } = req.body;
-
-  if (!last_name || !first_name || !username || !password) {
-    return res.status(400).json({ error: "Укажите фамилию, имя, логин и пароль" });
-  }
-  if (password.length < 6) {
-    return res.status(400).json({ error: "Пароль должен быть не менее 6 символов" });
-  }
 
   try {
     const hash = await bcrypt.hash(password, 10);
@@ -67,18 +63,14 @@ router.post("/", async (req: Request, res: Response) => {
     if ((err as { code?: string }).code === "23505") {
       return res.status(409).json({ error: "Логин уже занят" });
     }
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
 // PUT /api/admins/:id — обновить данные
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", validate(UpdateAdminSchema), async (req: Request, res: Response) => {
   const { last_name, first_name, middle_name, username, is_active } = req.body;
-
-  if (!last_name || !first_name || !username) {
-    return res.status(400).json({ error: "Укажите фамилию, имя и логин" });
-  }
 
   try {
     const { rows } = await pool.query(
@@ -94,18 +86,14 @@ router.put("/:id", async (req: Request, res: Response) => {
     if ((err as { code?: string }).code === "23505") {
       return res.status(409).json({ error: "Логин уже занят" });
     }
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
 // PUT /api/admins/:id/password — сменить пароль
-router.put("/:id/password", async (req: Request, res: Response) => {
+router.put("/:id/password", validate(ChangePasswordSchema), async (req: Request, res: Response) => {
   const { password } = req.body;
-
-  if (!password || password.length < 6) {
-    return res.status(400).json({ error: "Пароль должен быть не менее 6 символов" });
-  }
 
   try {
     const hash = await bcrypt.hash(password, 10);
@@ -118,7 +106,7 @@ router.put("/:id/password", async (req: Request, res: Response) => {
     if (rows.length === 0) return res.status(404).json({ error: "Админ не найден" });
     res.json({ message: "Пароль обновлён", admin: rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -143,7 +131,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     if (rows.length === 0) return res.status(404).json({ error: "Админ не найден" });
     res.json({ message: "Админ удалён", id: rows[0].id });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });

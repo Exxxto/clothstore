@@ -1,31 +1,24 @@
 import { Router, Request, Response } from "express";
+import logger from "../lib/logger";
 import { pool } from "../db";
 import { requireAuth } from "../middleware/auth";
+import { validate } from "../middleware/validate";
+import { CreateComplaintSchema, UpdateComplaintStatusSchema } from "../schemas";
 
 const router = Router();
-
-const ALLOWED_STATUSES = new Set(["new", "in_review", "resolved", "rejected"]);
 
 function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
 // POST /api/complaints — public
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", validate(CreateComplaintSchema), async (req: Request, res: Response) => {
   const requesterName = normalizeText(req.body.requester_name);
   const email = normalizeText(req.body.email);
   const phone = normalizeText(req.body.phone);
   const orderNumber = normalizeText(req.body.order_number);
   const category = normalizeText(req.body.category);
   const message = normalizeText(req.body.message);
-
-  if (!requesterName || !email || !category || !message) {
-    return res.status(400).json({ error: "Укажите имя, email, категорию и текст жалобы" });
-  }
-
-  if (!email.includes("@")) {
-    return res.status(400).json({ error: "Укажите корректный email" });
-  }
 
   try {
     const { rows } = await pool.query(
@@ -37,7 +30,7 @@ router.post("/", async (req: Request, res: Response) => {
 
     res.status(201).json(rows[0]);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -92,7 +85,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -122,18 +115,14 @@ router.get("/:id", async (req: Request, res: Response) => {
 
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
 // PUT /api/complaints/:id/status — admin only
-router.put("/:id/status", async (req: Request, res: Response) => {
+router.put("/:id/status", validate(UpdateComplaintStatusSchema), async (req: Request, res: Response) => {
   const status = normalizeText(req.body.status);
-
-  if (!status || !ALLOWED_STATUSES.has(status)) {
-    return res.status(400).json({ error: "Укажите корректный статус жалобы" });
-  }
 
   try {
     const { rows } = await pool.query(
@@ -151,7 +140,7 @@ router.put("/:id/status", async (req: Request, res: Response) => {
 
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });

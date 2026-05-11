@@ -1,7 +1,10 @@
 import { Router, Request, Response } from "express";
+import logger from "../lib/logger";
 import bcrypt from "bcryptjs";
 import { pool } from "../db";
 import { requireAuth } from "../middleware/auth";
+import { validate } from "../middleware/validate";
+import { CreateUserSchema, UpdateUserSchema, ChangePasswordSchema } from "../schemas";
 
 const router = Router();
 
@@ -17,7 +20,7 @@ router.get("/", async (_req: Request, res: Response) => {
     );
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -34,18 +37,14 @@ router.get("/:id", async (req: Request, res: Response) => {
     if (rows.length === 0) return res.status(404).json({ error: "Пользователь не найден" });
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
 // POST /api/users — создать пользователя
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", validate(CreateUserSchema), async (req: Request, res: Response) => {
   const { last_name, first_name, middle_name, email, password, phone } = req.body;
-
-  if (!last_name || !first_name || !email || !password) {
-    return res.status(400).json({ error: "Укажите фамилию, имя, email и пароль" });
-  }
 
   try {
     const hash = await bcrypt.hash(password, 10);
@@ -60,13 +59,13 @@ router.post("/", async (req: Request, res: Response) => {
     if ((err as { code?: string }).code === "23505") {
       return res.status(409).json({ error: "Email уже зарегистрирован" });
     }
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
 // PUT /api/users/:id — обновить данные
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", validate(UpdateUserSchema), async (req: Request, res: Response) => {
   const { last_name, first_name, middle_name, email, phone, is_active } = req.body;
 
   try {
@@ -83,18 +82,14 @@ router.put("/:id", async (req: Request, res: Response) => {
     if ((err as { code?: string }).code === "23505") {
       return res.status(409).json({ error: "Email уже занят" });
     }
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
 // PUT /api/users/:id/password — сменить пароль пользователя
-router.put("/:id/password", async (req: Request, res: Response) => {
+router.put("/:id/password", validate(ChangePasswordSchema), async (req: Request, res: Response) => {
   const { password } = req.body;
-
-  if (!password || password.length < 6) {
-    return res.status(400).json({ error: "Пароль должен быть не менее 6 символов" });
-  }
 
   try {
     const hash = await bcrypt.hash(password, 10);
@@ -105,7 +100,7 @@ router.put("/:id/password", async (req: Request, res: Response) => {
     if (rows.length === 0) return res.status(404).json({ error: "Пользователь не найден" });
     res.json({ message: "Пароль обновлён", user: rows[0] });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -120,7 +115,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     if (rows.length === 0) return res.status(404).json({ error: "Пользователь не найден" });
     res.json({ message: "Пользователь удалён", id: rows[0].id });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });

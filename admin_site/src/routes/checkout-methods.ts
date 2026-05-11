@@ -1,6 +1,9 @@
 import { Router, Request, Response } from "express";
+import logger from "../lib/logger";
 import { pool, logAuditAction } from "../db";
 import { requireAuth } from "../middleware/auth";
+import { validate } from "../middleware/validate";
+import { ShippingMethodSchema, PaymentMethodSchema } from "../schemas";
 
 const router = Router();
 
@@ -35,18 +38,14 @@ router.get("/", async (_req: Request, res: Response) => {
       payment_methods: paymentRows.rows,
     });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-router.post("/shipping", async (req: Request, res: Response) => {
+router.post("/shipping", validate(ShippingMethodSchema), async (req: Request, res: Response) => {
   const code = normalizeText(req.body.code);
   const name = normalizeText(req.body.name);
-
-  if (!code || !name) {
-    return res.status(400).json({ error: "Укажите code и name" });
-  }
 
   try {
     const { rows } = await pool.query(
@@ -77,18 +76,14 @@ router.post("/shipping", async (req: Request, res: Response) => {
     if ((err as { code?: string }).code === "23505") {
       return res.status(409).json({ error: "Способ доставки с таким кодом уже существует" });
     }
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-router.put("/shipping/:id", async (req: Request, res: Response) => {
+router.put("/shipping/:id", validate(ShippingMethodSchema), async (req: Request, res: Response) => {
   const code = normalizeText(req.body.code);
   const name = normalizeText(req.body.name);
-
-  if (!code || !name) {
-    return res.status(400).json({ error: "Укажите code и name" });
-  }
 
   try {
     const { rows } = await pool.query(
@@ -131,7 +126,7 @@ router.put("/shipping/:id", async (req: Request, res: Response) => {
     if ((err as { code?: string }).code === "23505") {
       return res.status(409).json({ error: "Способ доставки с таким кодом уже существует" });
     }
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -158,18 +153,14 @@ router.delete("/shipping/:id", async (req: Request, res: Response) => {
 
     res.json({ message: "Способ доставки удалён", id: rows[0].id });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-router.post("/payment", async (req: Request, res: Response) => {
+router.post("/payment", validate(PaymentMethodSchema), async (req: Request, res: Response) => {
   const code = normalizeText(req.body.code);
   const name = normalizeText(req.body.name);
-
-  if (!code || !name) {
-    return res.status(400).json({ error: "Укажите code и name" });
-  }
 
   try {
     const { rows } = await pool.query(
@@ -200,18 +191,14 @@ router.post("/payment", async (req: Request, res: Response) => {
     if ((err as { code?: string }).code === "23505") {
       return res.status(409).json({ error: "Способ оплаты с таким кодом уже существует" });
     }
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-router.put("/payment/:id", async (req: Request, res: Response) => {
+router.put("/payment/:id", validate(PaymentMethodSchema), async (req: Request, res: Response) => {
   const code = normalizeText(req.body.code);
   const name = normalizeText(req.body.name);
-
-  if (!code || !name) {
-    return res.status(400).json({ error: "Укажите code и name" });
-  }
 
   try {
     const { rows } = await pool.query(
@@ -254,7 +241,7 @@ router.put("/payment/:id", async (req: Request, res: Response) => {
     if ((err as { code?: string }).code === "23505") {
       return res.status(409).json({ error: "Способ оплаты с таким кодом уже существует" });
     }
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -281,7 +268,7 @@ router.delete("/payment/:id", async (req: Request, res: Response) => {
 
     res.json({ message: "Способ оплаты удалён", id: rows[0].id });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });

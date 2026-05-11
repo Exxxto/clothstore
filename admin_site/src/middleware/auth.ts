@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import path from "path";
 import { pool } from "../db";
+import logger from "../lib/logger";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
@@ -58,7 +59,7 @@ export async function login(req: Request, res: Response) {
       role: "admin",
     });
   } catch (err) {
-    console.error(err);
+    logger.error("Login error", { error: err });
     return res.status(500).json({ error: "Ошибка сервера" });
   }
 }

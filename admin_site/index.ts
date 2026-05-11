@@ -6,6 +6,8 @@ import swaggerUi from "swagger-ui-express";
 import { initDB } from "./src/db";
 import { login } from "./src/middleware/auth";
 import { swaggerSpec } from "./src/swagger";
+import logger from "./src/lib/logger";
+import httpLogger from "./src/middleware/httpLogger";
 import productsRouter from "./src/routes/products";
 import adminsRouter from "./src/routes/admins";
 import usersRouter from "./src/routes/users";
@@ -34,6 +36,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(httpLogger);
 
 // Auth
 app.post("/api/auth/login", login);
@@ -72,10 +75,10 @@ app.get("/api/health", (_req, res) => {
 initDB()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`🚀 Admin API server running on http://localhost:${PORT}`);
+      logger.info(`🚀 Admin API server running on http://localhost:${PORT}`);
     });
   })
   .catch((err) => {
-    console.error("❌ Failed to initialize database:", err);
+    logger.error("❌ Failed to initialize database", { error: err });
     process.exit(1);
   });

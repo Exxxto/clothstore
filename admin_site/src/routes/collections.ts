@@ -1,6 +1,9 @@
 import { Router, Request, Response } from "express";
+import logger from "../lib/logger";
 import { pool, logAuditAction } from "../db";
 import { requireAuth } from "../middleware/auth";
+import { validate } from "../middleware/validate";
+import { CollectionSchema } from "../schemas";
 
 const router = Router();
 
@@ -33,17 +36,13 @@ router.get("/", async (_req: Request, res: Response) => {
     );
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", validate(CollectionSchema), async (req: Request, res: Response) => {
   const { name, slug, description, is_active, sort_order } = req.body;
-
-  if (!name) {
-    return res.status(400).json({ error: "Укажите название коллекции" });
-  }
 
   const finalSlug = typeof slug === "string" && slug.trim() ? slug.trim() : makeSlug(name);
 
@@ -69,17 +68,13 @@ router.post("/", async (req: Request, res: Response) => {
     if ((err as { code?: string }).code === "23505") {
       return res.status(409).json({ error: "Название или slug уже заняты" });
     }
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", validate(CollectionSchema), async (req: Request, res: Response) => {
   const { name, slug, description, is_active, sort_order } = req.body;
-
-  if (!name) {
-    return res.status(400).json({ error: "Укажите название коллекции" });
-  }
 
   const finalSlug = typeof slug === "string" && slug.trim() ? slug.trim() : makeSlug(name);
 
@@ -115,7 +110,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     if ((err as { code?: string }).code === "23505") {
       return res.status(409).json({ error: "Название или slug уже заняты" });
     }
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -142,7 +137,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
 
     res.json({ message: "Коллекция удалена", id: rows[0].id });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });

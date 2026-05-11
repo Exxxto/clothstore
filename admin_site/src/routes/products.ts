@@ -1,7 +1,10 @@
 import { Router, Request, Response } from "express";
+import logger from "../lib/logger";
 import { pool, logAuditAction, logPriceHistory, syncProductImages, syncProductVariants } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { normalizeGenderInput } from "../lib/productNormalization";
+import { validate } from "../middleware/validate";
+import { ProductSchema } from "../schemas";
 
 const router = Router();
 
@@ -44,7 +47,7 @@ router.get("/", async (req: Request, res: Response) => {
     const { rows } = await pool.query(query, params);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -56,20 +59,17 @@ router.get("/:id", async (req: Request, res: Response) => {
     if (rows.length === 0) return res.status(404).json({ error: "Товар не найден" });
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
 // POST /api/products — admin only
-router.post("/", requireAuth, async (req: Request, res: Response) => {
+router.post("/", requireAuth, validate(ProductSchema), async (req: Request, res: Response) => {
   try {
     const { name, type, gender, price, old_price, image_url, season, category_id, is_new, sizes, description } = req.body;
     const normalizedGender = normalizeGenderInput(typeof gender === "string" ? gender : undefined);
 
-    if (!name || !type || !gender || !price || !season) {
-      return res.status(400).json({ error: "Заполните обязательные поля: name, type, gender, price, season" });
-    }
     if (!normalizedGender) {
       return res.status(400).json({ error: "Укажите корректный пол товара" });
     }
@@ -106,20 +106,17 @@ router.post("/", requireAuth, async (req: Request, res: Response) => {
 
     res.status(201).json(rows[0]);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
 // PUT /api/products/:id — admin only
-router.put("/:id", requireAuth, async (req: Request, res: Response) => {
+router.put("/:id", requireAuth, validate(ProductSchema), async (req: Request, res: Response) => {
   try {
     const { name, type, gender, price, old_price, image_url, season, category_id, is_new, sizes, description } = req.body;
     const normalizedGender = normalizeGenderInput(typeof gender === "string" ? gender : undefined);
 
-    if (!name || !type || !gender || !price || !season) {
-      return res.status(400).json({ error: "Заполните обязательные поля: name, type, gender, price, season" });
-    }
     if (!normalizedGender) {
       return res.status(400).json({ error: "Укажите корректный пол товара" });
     }
@@ -168,7 +165,7 @@ router.put("/:id", requireAuth, async (req: Request, res: Response) => {
 
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -193,7 +190,7 @@ router.delete("/:id", requireAuth, async (req: Request, res: Response) => {
 
     res.json({ message: "Товар удалён", id: rows[0].id });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });

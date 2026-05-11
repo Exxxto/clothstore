@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import logger from "../lib/logger";
 import type { PoolClient } from "pg";
 import { pool } from "../db";
 
@@ -497,7 +498,7 @@ router.get("/account/profile", async (req: Request, res: Response) => {
     const addressRows = await getAccountAddresses(sessionId);
     res.json({ profile, addresses: addressRows });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -520,7 +521,7 @@ router.put("/account/profile", async (req: Request, res: Response) => {
 
     res.json(profile);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -535,7 +536,7 @@ router.get("/account/addresses", async (req: Request, res: Response) => {
     const rows = await getAccountAddresses(sessionId);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -612,7 +613,7 @@ router.post("/account/addresses", async (req: Request, res: Response) => {
     res.status(201).json(rows);
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   } finally {
     client.release();
@@ -715,7 +716,7 @@ router.put("/account/addresses/:addressId", async (req: Request, res: Response) 
     res.json(rows);
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   } finally {
     client.release();
@@ -769,7 +770,7 @@ router.patch("/account/addresses/:addressId/default", async (req: Request, res: 
     res.json(rows);
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   } finally {
     client.release();
@@ -828,7 +829,7 @@ router.delete("/account/addresses/:addressId", async (req: Request, res: Respons
     res.json(rows);
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   } finally {
     client.release();
@@ -865,7 +866,7 @@ router.get("/account/orders", async (req: Request, res: Response) => {
     );
     res.json(rows.map((row) => ({ ...row, status: normalizeOrderStatus(row.status) })));
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -880,7 +881,7 @@ router.get("/wishlist", async (req: Request, res: Response) => {
     const rows = await getWishlistProducts(sessionId);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -905,7 +906,7 @@ router.post("/wishlist/items", async (req: Request, res: Response) => {
     const rows = await getWishlistProducts(sessionId);
     res.status(201).json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -931,7 +932,7 @@ router.delete("/wishlist/items/:productId", async (req: Request, res: Response) 
     const rows = await getWishlistProducts(sessionId);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -946,7 +947,7 @@ router.get("/cart", async (req: Request, res: Response) => {
     const payload = await buildCartResponse(sessionId);
     res.json(payload);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -1025,7 +1026,7 @@ router.post("/cart/items", async (req: Request, res: Response) => {
     const payload = await buildCartResponse(sessionId);
     res.status(201).json(payload);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -1067,7 +1068,7 @@ router.put("/cart/items/:itemId", async (req: Request, res: Response) => {
     const payload = await buildCartResponse(sessionId);
     res.json(payload);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -1094,7 +1095,7 @@ router.delete("/cart/items/:itemId", async (req: Request, res: Response) => {
     const payload = await buildCartResponse(sessionId);
     res.json(payload);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -1120,7 +1121,7 @@ router.post("/promo-codes/validate", async (req: Request, res: Response) => {
       discount_value: result.promo.discount_value,
     });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -1133,7 +1134,7 @@ router.get("/checkout/options", async (_req: Request, res: Response) => {
       payment_methods: paymentMethods,
     });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });

@@ -1,6 +1,9 @@
 import { Router, Request, Response } from "express";
+import logger from "../lib/logger";
 import { createStockMovement, logAuditAction, pool } from "../db";
 import { requireAuth } from "../middleware/auth";
+import { validate } from "../middleware/validate";
+import { StockMovementSchema } from "../schemas";
 
 const router = Router();
 
@@ -66,7 +69,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -104,17 +107,13 @@ router.get("/movements", async (req: Request, res: Response) => {
 
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-router.post("/movements", async (req: Request, res: Response) => {
+router.post("/movements", validate(StockMovementSchema), async (req: Request, res: Response) => {
   const { warehouse_id, product_variant_id, quantity_delta, movement_type, reason, reference_type, reference_id, notes } = req.body;
-
-  if (!warehouse_id || !product_variant_id || !movement_type || !Number.isFinite(Number(quantity_delta)) || Number(quantity_delta) === 0) {
-    return res.status(400).json({ error: "Укажите склад, вариант, тип движения и ненулевое количество" });
-  }
 
   try {
     const updatedBalance = await createStockMovement({

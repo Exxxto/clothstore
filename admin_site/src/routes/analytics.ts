@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import logger from "../lib/logger";
 import { pool } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { normalizeGenderInput } from "../lib/productNormalization";
@@ -321,7 +322,7 @@ router.get("/", async (req: Request, res: Response) => {
       },
     });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });

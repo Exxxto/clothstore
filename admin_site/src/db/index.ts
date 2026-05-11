@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 import bcrypt from "bcryptjs";
+import logger from "../lib/logger";
 import { generateProducts, normalizeClothingType, normalizeGender, pickProductImage } from "../../../src/lib/productCatalog";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
@@ -715,7 +716,7 @@ export async function initDB() {
       await seedAdmins(client);
     }
 
-    console.log("✅ Database initialized");
+    logger.info("✅ Database initialized");
   } finally {
     client.release();
   }
@@ -1035,7 +1036,7 @@ async function seedAdmins(client: PoolClient) {
      VALUES ($1, $2, $3, $4, $5)`,
     ["Администратор", "Главный", null, process.env.ADMIN_USERNAME || "admin", hash]
   );
-  console.log("✅ Default admin created");
+  logger.info("✅ Default admin created");
 }
 
 async function seedProducts(client: PoolClient) {
@@ -1214,7 +1215,7 @@ async function seedOrders(client: PoolClient) {
   );
 
   if (products.length < 6) {
-    console.log("⚠️ Not enough products to seed orders");
+    logger.warn("⚠️ Not enough products to seed orders");
     return;
   }
 
@@ -1373,7 +1374,7 @@ async function seedOrders(client: PoolClient) {
     }
   }
 
-  console.log(`✅ Seeded ${seedData.length} test orders`);
+  logger.info(`✅ Seeded ${seedData.length} test orders`);
 }
 
 function isAutoManagedImage(imageUrl: string | null | undefined) {
@@ -1410,5 +1411,5 @@ export async function syncProductImages(client: Pick<PoolClient, "query">) {
     // Manually uploaded images (/assets/products/uploads/) are never touched
   }
 
-  console.log("✅ Product images synchronized");
+  logger.info("✅ Product images synchronized");
 }

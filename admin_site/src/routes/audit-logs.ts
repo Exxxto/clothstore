@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import logger from "../lib/logger";
 import { pool } from "../db";
 import { requireAuth } from "../middleware/auth";
 
@@ -29,7 +30,7 @@ router.get("/", async (req: Request, res: Response) => {
     );
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -56,7 +57,7 @@ router.get("/:id", async (req: Request, res: Response) => {
     if (rows.length === 0) return res.status(404).json({ error: "Запись не найдена" });
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });

@@ -1,6 +1,9 @@
 import { Router, Request, Response } from "express";
+import logger from "../lib/logger";
 import { createStockMovement, logAuditAction, logPriceHistory, pool } from "../db";
 import { requireAuth } from "../middleware/auth";
+import { validate } from "../middleware/validate";
+import { CreateProductVariantSchema, UpdateProductVariantSchema } from "../schemas";
 
 const router = Router();
 
@@ -78,7 +81,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -119,12 +122,12 @@ router.get("/:id", async (req: Request, res: Response) => {
 
     res.json({ ...rows[0], balances });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", validate(CreateProductVariantSchema), async (req: Request, res: Response) => {
   const {
     product_id,
     variant_name,
@@ -139,10 +142,6 @@ router.post("/", async (req: Request, res: Response) => {
     is_active,
     attributes,
   } = req.body;
-
-  if (!product_id || !price) {
-    return res.status(400).json({ error: "Укажите товар и цену варианта" });
-  }
 
   try {
     const { rows: productRows } = await pool.query(
@@ -227,12 +226,12 @@ router.post("/", async (req: Request, res: Response) => {
     if ((err as { code?: string }).code === "23505") {
       return res.status(409).json({ error: "SKU уже используется" });
     }
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", validate(UpdateProductVariantSchema), async (req: Request, res: Response) => {
   const {
     variant_name,
     size,
@@ -318,7 +317,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     if ((err as { code?: string }).code === "23505") {
       return res.status(409).json({ error: "SKU уже используется" });
     }
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
@@ -349,7 +348,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
 
     res.json({ message: "Вариант товара деактивирован", id: rows[0].id });
   } catch (err) {
-    console.error(err);
+    logger.error("Route error", { error: err });
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
