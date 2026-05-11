@@ -19,6 +19,7 @@ export type PublicProductRow = {
   is_new: boolean;
   sizes: string[];
   description: string;
+  material: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -56,6 +57,7 @@ export function mapPublicProduct(row: PublicProductRow): Product {
     isNew: row.is_new,
     sizes: Array.isArray(row.sizes) ? row.sizes : [],
     description: row.description || "",
+    material: row.material ?? undefined,
   };
 }
 
@@ -64,12 +66,14 @@ export async function apiGetPublicProducts(filters?: {
   type?: string;
   season?: string;
   search?: string;
+  material?: string;
 }) {
   const params = new URLSearchParams();
   if (filters?.gender) params.set("gender", filters.gender);
   if (filters?.type) params.set("type", filters.type);
   if (filters?.season) params.set("season", filters.season);
   if (filters?.search) params.set("search", filters.search);
+  if (filters?.material) params.set("material", filters.material);
 
   const response = await fetch(`/api/products?${params.toString()}`);
   if (!response.ok) {

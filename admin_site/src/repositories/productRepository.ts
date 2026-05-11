@@ -5,6 +5,7 @@ export interface ProductFilters {
   type?: string;
   season?: string;
   search?: string;
+  material?: string;
 }
 
 export async function findAllProducts(filters: ProductFilters = {}) {
@@ -28,6 +29,10 @@ export async function findAllProducts(filters: ProductFilters = {}) {
   if (filters.season) {
     query += ` AND season = $${idx++}`;
     params.push(filters.season);
+  }
+  if (filters.material) {
+    query += ` AND LOWER(material) = LOWER($${idx++})`;
+    params.push(filters.material);
   }
   if (filters.search) {
     query += ` AND (name ILIKE $${idx} OR description ILIKE $${idx})`;
@@ -57,15 +62,16 @@ export async function createProduct(data: {
   is_new: boolean;
   sizes: string[];
   description: string;
+  material: string | null;
 }) {
   const { rows } = await pool.query(
-    `INSERT INTO products (name, type, gender, price, old_price, image_url, season, category_id, is_new, sizes, description)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    `INSERT INTO products (name, type, gender, price, old_price, image_url, season, category_id, is_new, sizes, description, material)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
      RETURNING *`,
     [
       data.name, data.type, data.gender, data.price, data.old_price,
       data.image_url, data.season, data.category_id, data.is_new,
-      data.sizes, data.description,
+      data.sizes, data.description, data.material,
     ]
   );
   return rows[0];
@@ -85,18 +91,20 @@ export async function updateProduct(
     is_new: boolean;
     sizes: string[];
     description: string;
+    material: string | null;
   }
 ) {
   const { rows } = await pool.query(
     `UPDATE products
      SET name=$1, type=$2, gender=$3, price=$4, old_price=$5, image_url=$6,
-         season=$7, category_id=$8, is_new=$9, sizes=$10, description=$11, updated_at=NOW()
-     WHERE id=$12
+         season=$7, category_id=$8, is_new=$9, sizes=$10, description=$11,
+         material=$12, updated_at=NOW()
+     WHERE id=$13
      RETURNING *`,
     [
       data.name, data.type, data.gender, data.price, data.old_price,
       data.image_url, data.season, data.category_id, data.is_new,
-      data.sizes, data.description, id,
+      data.sizes, data.description, data.material, id,
     ]
   );
   return rows[0] ?? null;

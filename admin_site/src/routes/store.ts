@@ -277,9 +277,20 @@ async function getWishlistProducts(sessionId: string) {
   const { rows } = await pool.query(
     `SELECT wi.id,
             wi.product_id,
-            wi.created_at
+            wi.created_at,
+            p.name        AS product_name,
+            p.type        AS product_type,
+            p.gender      AS product_gender,
+            p.price       AS product_price,
+            p.old_price   AS product_old_price,
+            p.image_url   AS product_image_url,
+            p.slug        AS product_slug,
+            p.season      AS product_season,
+            p.is_new      AS product_is_new,
+            p.sizes       AS product_sizes
      FROM wishlist_items wi
      INNER JOIN wishlists w ON w.id = wi.wishlist_id
+     LEFT JOIN products p ON p.id = wi.product_id
      WHERE w.session_id = $1
      ORDER BY wi.created_at DESC, wi.id DESC`,
     [sessionId]
@@ -965,7 +976,7 @@ router.post("/cart/items", async (req: Request, res: Response) => {
 
   try {
     const { rows: productRows } = await pool.query(
-      `SELECT id, name, price, image_url
+      `SELECT id, name, price, image_url, slug, gender, type
        FROM products
        WHERE id = $1
        LIMIT 1`,
@@ -977,6 +988,16 @@ router.post("/cart/items", async (req: Request, res: Response) => {
     }
 
     const product = productRows[0];
+
+    // If product has no image_url, derive one from slug or gender/type
+    let resolvedImageUrl: string | null = product.image_url;
+    if (!resolvedImageUrl && product.slug) {
+      // slug format: {gender}-{type}-{NNN}, e.g. "men-tshirts-001"
+      resolvedImageUrl = `/assets/products/catalog/${product.slug}.jpg`;
+    } else if (!resolvedImageUrl && product.gender && product.type) {
+      resolvedImageUrl = `/assets/products/catalog/${product.gender}-${product.type}-001.jpg`;
+    }
+
     const variant = await resolveVariant({ productId, productVariantId, size });
     const cart = await getOrCreateCart(sessionId);
     const finalVariantId = variant?.id ?? null;
@@ -1019,7 +1040,7 @@ router.post("/cart/items", async (req: Request, res: Response) => {
            quantity
          )
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [cart.id, productId, finalVariantId, product.name, product.image_url, finalSize, finalPrice, quantity]
+        [cart.id, productId, finalVariantId, product.name, resolvedImageUrl, finalSize, finalPrice, quantity]
       );
     }
 

@@ -24,6 +24,7 @@ import inventoryRouter from "./src/routes/inventory";
 import storeRouter from "./src/routes/store";
 import promoCodesRouter from "./src/routes/promo-codes";
 import checkoutMethodsRouter from "./src/routes/checkout-methods";
+import { adminReviewsRouter } from "./src/routes/reviews";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
@@ -64,6 +65,7 @@ app.use("/api/inventory", inventoryRouter);
 app.use("/api/store", storeRouter);
 app.use("/api/promo-codes", promoCodesRouter);
 app.use("/api/checkout-methods", checkoutMethodsRouter);
+app.use("/api/reviews", adminReviewsRouter);
 
 // Health check
 app.get("/api/health", (_req, res) => {

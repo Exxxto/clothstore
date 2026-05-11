@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import pantheonImage from "@/assets/pantheon.jpg";
 import { formatPrice } from "@/data/products";
 import {
   apiCheckout,
@@ -400,7 +399,7 @@ const Checkout = () => {
           <div className="mb-10">
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
               <Sparkles size={14} strokeWidth={1.75} />
-              Checkout
+              Оформление
             </div>
             <div className="mt-5 max-w-3xl">
               <h1 className="text-3xl md:text-5xl font-light tracking-tight text-foreground">
@@ -820,7 +819,7 @@ const Checkout = () => {
                 <div className="h-24 bg-gradient-to-r from-zinc-900 via-zinc-700 to-zinc-500" />
                 <CardHeader className="-mt-10 pb-4">
                   <div className="w-20 h-20 rounded-full border-4 border-background bg-background shadow-md overflow-hidden">
-                    <img src={cartItems[0]?.image_url || cartItems[0]?.product?.image || pantheonImage} alt="Order preview" className="w-full h-full object-cover" />
+                    <img src={cartItems[0]?.image_url || cartItems[0]?.product?.image || "/placeholder.svg"} alt="Order preview" className="w-full h-full object-cover" />
                   </div>
                   <div className="pt-2">
                     <CardTitle className="text-xl font-light">Сводка заказа</CardTitle>
@@ -836,7 +835,7 @@ const Checkout = () => {
                     ) : cartItems.map((item) => (
                       <div key={item.id} className="flex gap-4 rounded-2xl border border-border bg-background/70 p-4">
                         <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0">
-                          <img src={item.image_url || item.product?.image || pantheonImage} alt={item.product_name} className="w-full h-full object-cover" />
+                          <img src={item.image_url || item.product?.image || "/placeholder.svg"} alt={item.product_name} className="w-full h-full object-cover" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-3">

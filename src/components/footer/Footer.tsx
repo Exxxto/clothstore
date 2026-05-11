@@ -43,7 +43,7 @@ const Footer = () => {
             <ul className="space-y-3">
               {[
                 { label: "Примерочная", to: "/fitting-room" },
-                { label: "Жалобы", to: "/complaints" },
+                { label: "Поддержка", to: "/complaints" },
                 { label: "Доставка", to: "/about/delivery" },
                 { label: "Возврат", to: "/about/returns" },
                 { label: "Размеры", to: "/about/size-guide" },
@@ -62,9 +62,9 @@ const Footer = () => {
             <p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-5">Мы в сети</p>
             <ul className="space-y-3">
               {[
-                { label: "Telegram", href: "#" },
+                { label: "MAX", href: "#" },
                 { label: "VK", href: "#" },
-                { label: "YouTube", href: "#" },
+                { label: "Rutube", href: "#" },
               ].map(({ label, href }) => (
                 <li key={label}>
                   <a

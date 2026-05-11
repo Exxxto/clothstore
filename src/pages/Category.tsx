@@ -12,10 +12,7 @@ import { apiGetPublicProducts } from "@/lib/productApi";
 
 const Category = () => {
   const { category } = useParams();
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
-  const [priceFrom, setPriceFrom] = useState("");
-  const [priceTo, setPriceTo] = useState("");
   const [catalogProducts, setCatalogProducts] = useState(products);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const canonicalCategory = normalizeCategorySlug(category);
@@ -27,7 +24,9 @@ const Category = () => {
 
     apiGetPublicProducts()
       .then((rows) => {
-        if (active) setCatalogProducts(rows);
+        if (active) {
+          setCatalogProducts(rows);
+        }
       })
       .catch(() => {
         if (active) setCatalogProducts(products);
@@ -68,15 +67,6 @@ const Category = () => {
       }
     }
 
-    const minPrice = priceFrom ? Number(priceFrom) : null;
-    const maxPrice = priceTo ? Number(priceTo) : null;
-    if (minPrice !== null) {
-      result = result.filter((p) => p.price >= minPrice);
-    }
-    if (maxPrice !== null) {
-      result = result.filter((p) => p.price <= maxPrice);
-    }
-
     const sorted = [...result].sort((a, b) => {
       switch (sortBy) {
         case "price-low":
@@ -94,18 +84,7 @@ const Category = () => {
     });
 
     return sorted;
-  }, [canonicalCategory, catalogProducts, categoryFilterValue, priceFrom, priceTo, sortBy]);
-
-  const handleApplyFilters = () => {
-    setFiltersOpen(false);
-  };
-
-  const handleResetFilters = () => {
-    setSortBy("featured");
-    setPriceFrom("");
-    setPriceTo("");
-    setFiltersOpen(false);
-  };
+  }, [canonicalCategory, catalogProducts, categoryFilterValue, sortBy]);
 
   const categoryLabel = getCategoryLabel(canonicalCategory);
 
@@ -124,17 +103,9 @@ const Category = () => {
           <div className="rounded-[2rem] border border-border/70 bg-background/80 backdrop-blur-sm shadow-[0_18px_50px_rgba(0,0,0,0.04)] overflow-hidden">
             <div className="px-2 md:px-3 pt-3 md:pt-4">
               <FilterSortBar
-                filtersOpen={filtersOpen}
-                setFiltersOpen={setFiltersOpen}
                 itemCount={visibleProducts.length}
                 sortBy={sortBy}
                 setSortBy={setSortBy}
-                priceFrom={priceFrom}
-                setPriceFrom={setPriceFrom}
-                priceTo={priceTo}
-                setPriceTo={setPriceTo}
-                onApplyFilters={handleApplyFilters}
-                onResetFilters={handleResetFilters}
               />
             </div>
             <div className="px-2 md:px-3 pb-4 md:pb-6">

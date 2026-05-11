@@ -83,50 +83,6 @@ const SizeGuide = () => {
           </div>
         </ContentSection>
 
-        <ContentSection title="Размеры браслетов и ожерелий">
-          <div className="grid md:grid-cols-2 gap-12">
-            <div className="space-y-6">
-              <h3 className="text-xl font-light text-foreground">Размеры браслетов</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Маленький</span>
-                  <span className="text-foreground">6.5" - 7"</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Средний</span>
-                  <span className="text-foreground">7" - 7.5"</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Большой</span>
-                  <span className="text-foreground">7.5" - 8"</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-6">
-              <h3 className="text-xl font-light text-foreground">Длины ожерелий</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Чокер</span>
-                  <span className="text-foreground">14" - 16"</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Принцесса</span>
-                  <span className="text-foreground">17" - 19"</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Матине</span>
-                  <span className="text-foreground">20" - 24"</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Опера</span>
-                  <span className="text-foreground">28" - 36"</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </ContentSection>
-
         <ContentSection title="Нужна помощь?">
           <div className="space-y-6">
             <p className="text-muted-foreground">

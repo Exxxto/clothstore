@@ -13,12 +13,13 @@ function handleError(err: unknown, res: Response) {
 
 export async function getAll(req: Request, res: Response) {
   try {
-    const { gender, type, season, search } = req.query;
+    const { gender, type, season, search, material } = req.query;
     const products = await service.listProducts({
       gender: typeof gender === "string" ? gender : undefined,
       type: typeof type === "string" ? type : undefined,
       season: typeof season === "string" ? season : undefined,
       search: typeof search === "string" ? search : undefined,
+      material: typeof material === "string" ? material : undefined,
     });
     res.json(products);
   } catch (err) {

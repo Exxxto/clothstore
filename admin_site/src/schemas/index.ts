@@ -161,6 +161,7 @@ export const ProductSchema = z.object({
   is_new: z.boolean().optional().default(false),
   sizes: z.array(z.string()).optional().default([]),
   description: z.string().trim().optional().default(""),
+  material: z.string().trim().optional().nullable(),
 });
 
 // ---------------------------------------------------------------------------
@@ -322,6 +323,32 @@ export const CreateComplaintSchema = z.object({
 export const UpdateComplaintStatusSchema = z.object({
   status: z.enum(COMPLAINT_STATUSES, {
     errorMap: () => ({ message: "Укажите корректный статус жалобы" }),
+  }),
+});
+
+// ---------------------------------------------------------------------------
+// Product Reviews
+// ---------------------------------------------------------------------------
+
+export const CreateReviewSchema = z.object({
+  session_id: nonEmptyString("session_id"),
+  author_name: nonEmptyString("Имя автора"),
+  rating: z.preprocess(
+    (v) => (v === "" || v == null ? undefined : Number(v)),
+    z
+      .number({ required_error: "Оценка обязательна" })
+      .int("Оценка должна быть целым числом")
+      .min(1, "Минимальная оценка — 1")
+      .max(5, "Максимальная оценка — 5")
+  ),
+  body: nonEmptyString("Текст отзыва"),
+});
+
+const REVIEW_STATUSES = ["published", "hidden"] as const;
+
+export const UpdateReviewStatusSchema = z.object({
+  status: z.enum(REVIEW_STATUSES, {
+    errorMap: () => ({ message: "Статус должен быть 'published' или 'hidden'" }),
   }),
 });
 

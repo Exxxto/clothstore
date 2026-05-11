@@ -30,6 +30,10 @@ import AdminPromoCodes from "@/admin/pages/AdminPromoCodes";
 import AdminCheckoutMethods from "@/admin/pages/AdminCheckoutMethods";
 import { useAuth } from "@/admin/useAuth";
 import Complaints from "@/pages/Complaints";
+import SizeGuide from "@/pages/about/SizeGuide";
+import CustomerCare from "@/pages/about/CustomerCare";
+import Returns from "@/pages/about/Returns";
+import Delivery from "@/pages/about/Delivery";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +57,10 @@ const App = () => {
             <Route path="/account" element={<Account />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/complaints" element={<Complaints />} />
+            <Route path="/about/size-guide" element={<SizeGuide />} />
+            <Route path="/about/customer-care" element={<CustomerCare />} />
+            <Route path="/about/returns" element={<Returns />} />
+            <Route path="/about/delivery" element={<Delivery />} />
 
             {/* Admin routes */}
             <Route path="/admin/login" element={<AdminLogin onLogin={login} />} />

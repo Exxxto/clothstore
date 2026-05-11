@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { TriangleAlert, ShieldCheck, MessageSquareQuote, ArrowRight } from "lucide-react";
+import { TriangleAlert } from "lucide-react";
 
 const COMPLAINT_CATEGORIES = [
   { value: "quality", label: "Качество товара" },
@@ -116,23 +116,6 @@ export default function Complaints() {
                 Оформите жалобу по заказу, доставке, оплате или качеству товара. Обращение сразу попадает в админ-панель и получает статус обработки.
               </p>
 
-              <div className="mt-8 grid sm:grid-cols-3 gap-4 max-w-3xl">
-                <div className="rounded-3xl border border-border bg-background/85 p-5 shadow-[0_18px_40px_rgba(0,0,0,0.05)]">
-                  <ShieldCheck className="w-5 h-5 text-foreground" />
-                  <p className="mt-3 text-sm font-medium text-foreground">Прямая маршрутизация</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Жалоба сразу сохраняется в БД и видна админам.</p>
-                </div>
-                <div className="rounded-3xl border border-border bg-background/85 p-5 shadow-[0_18px_40px_rgba(0,0,0,0.05)]">
-                  <MessageSquareQuote className="w-5 h-5 text-foreground" />
-                  <p className="mt-3 text-sm font-medium text-foreground">Полный контекст</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Сохраняются контактные данные, заказ и текст обращения.</p>
-                </div>
-                <div className="rounded-3xl border border-border bg-background/85 p-5 shadow-[0_18px_40px_rgba(0,0,0,0.05)]">
-                  <ArrowRight className="w-5 h-5 text-foreground" />
-                  <p className="mt-3 text-sm font-medium text-foreground">Прозрачный статус</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Новая, в работе, решена или отклонена.</p>
-                </div>
-              </div>
             </div>
 
             <div className="lg:pt-8">

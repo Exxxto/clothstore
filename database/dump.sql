@@ -719,6 +719,7 @@ CREATE TABLE public.products (
     is_new boolean DEFAULT false,
     sizes text[] DEFAULT '{}'::text[] NOT NULL,
     description text,
+    material character varying(120),
     created_at timestamp without time zone DEFAULT now(),
     updated_at timestamp without time zone DEFAULT now()
 );
@@ -7774,6 +7775,13 @@ ALTER TABLE ONLY public.wishlist_items
 
 ALTER TABLE ONLY public.wishlists
     ADD CONSTRAINT wishlists_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: idx_products_material; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_products_material ON public.products USING btree (lower((material)::text));
 
 
 --

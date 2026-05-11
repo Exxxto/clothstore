@@ -28,8 +28,8 @@ const CustomerCare = () => {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="space-y-4">
               <h3 className="text-lg font-light text-foreground">Телефон</h3>
-              <p className="text-muted-foreground">+1 (555) 123-4567</p>
-              <p className="text-sm text-muted-foreground">Пн-Пт: 9:00-18:00 EST<br />Сб: 10:00-16:00 EST</p>
+              <p className="text-muted-foreground">+7 (863) 555-01-23</p>
+              <p className="text-sm text-muted-foreground">Пн-Пт: 9:00-18:00 МСК<br />Сб: 10:00-16:00 МСК</p>
             </div>
             <div className="space-y-4">
               <h3 className="text-lg font-light text-foreground">Электронная почта</h3>

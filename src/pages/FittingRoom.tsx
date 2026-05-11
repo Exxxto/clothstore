@@ -4,7 +4,8 @@ import { X, Plus, RotateCcw, Sparkles, ArrowRight } from "lucide-react";
 import Header from "../components/header/Header";
 import Footer from "../components/footer/Footer";
 import { Card, CardContent } from "@/components/ui/card";
-import { products, formatPrice, type Product } from "@/data/products";
+import { formatPrice, type Product } from "@/data/products";
+import { apiGetPublicProducts } from "@/lib/productApi";
 import fittingImage from "@/assets/fitting-room-preview.png";
 
 type SlotType = "верх" | "низ" | "обувь";
@@ -85,15 +86,23 @@ const FittingRoom = () => {
   const [activeSlot, setActiveSlot] = useState<SlotType | null>(null);
   const [selectedAudience, setSelectedAudience] = useState<AudienceType | null>(getInitialAudience);
 
-  const availableProducts = useMemo(() => {
-    if (!activeSlot || !selectedAudience) {
-      return [];
-    }
+  // Реальные товары из API
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
-    return products.filter((product) => {
-      return typeToSlot[product.type] === activeSlot && product.gender === selectedAudience;
-    });
-  }, [activeSlot, selectedAudience]);
+  useEffect(() => {
+    apiGetPublicProducts()
+      .then((rows) => setAllProducts(rows))
+      .catch(() => {})
+      .finally(() => setLoadingProducts(false));
+  }, []);
+
+  const availableProducts = useMemo(() => {
+    if (!activeSlot || !selectedAudience) return [];
+    return allProducts.filter(
+      (p) => typeToSlot[p.type] === activeSlot && p.gender === selectedAudience
+    );
+  }, [activeSlot, selectedAudience, allProducts]);
 
   const selectAudience = (audience: AudienceType) => {
     setSelectedAudience(audience);
@@ -122,6 +131,8 @@ const FittingRoom = () => {
   const totalPrice = Object.values(slots)
     .filter(Boolean)
     .reduce((sum, p) => sum + (p?.price || 0), 0);
+
+  const filledProducts = Object.values(slots).filter(Boolean) as Product[];
 
   const getSlotLabel = (slot: SlotType) => {
     if (selectedAudience) {
@@ -249,9 +260,22 @@ const FittingRoom = () => {
                   </div>
 
                   {totalPrice > 0 && (
-                    <div className="mt-4 flex items-center justify-between rounded-2xl border border-border bg-muted/40 px-4 py-3">
-                      <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Итог</span>
-                      <span className="text-base font-light text-foreground">{formatPrice(totalPrice)}</span>
+                    <div className="mt-4 space-y-2">
+                      <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/40 px-4 py-3">
+                        <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Итог</span>
+                        <span className="text-base font-light text-foreground">{formatPrice(totalPrice)}</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          filledProducts.forEach((p) => {
+                            // TODO: добавить в корзину
+                          });
+                        }}
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-foreground text-background px-4 py-3 text-sm font-light transition-all hover:bg-foreground/90 active:scale-[0.98]"
+                      >
+                        <Sparkles size={14} strokeWidth={1.75} />
+                        Примерить
+                      </button>
                     </div>
                   )}
                 </CardContent>
@@ -270,31 +294,41 @@ const FittingRoom = () => {
                       </p>
                       </div>
                       <div className="rounded-full border border-border bg-background px-3 py-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                        {availableProducts.length} вариантов
+                        {loadingProducts ? "..." : `${availableProducts.length} вариантов`}
                       </div>
                     </div>
 
                     {selectedAudience ? (
-                      <div className="grid grid-cols-2 gap-3 max-h-[32rem] overflow-y-auto pr-1">
-                        {availableProducts.map((product) => (
-                          <button
-                            key={product.id}
-                            onClick={() => addToSlot(product)}
-                            className="group overflow-hidden rounded-2xl border border-border bg-background text-left transition-all hover:border-foreground hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)]"
-                          >
-                            <div className="aspect-square overflow-hidden bg-secondary">
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-                              />
-                            </div>
-                            <div className="p-3">
-                              <p className="truncate text-sm font-medium text-foreground">{product.name}</p>
-                              <p className="mt-1 text-xs text-muted-foreground">{formatPrice(product.price)}</p>
-                            </div>
-                          </button>
-                        ))}
+                      <div className="grid grid-cols-3 gap-3 max-h-[32rem] overflow-y-auto pr-1">
+                        {loadingProducts ? (
+                          <div className="col-span-2 py-8 text-center text-sm text-muted-foreground font-light">
+                            Загрузка товаров...
+                          </div>
+                        ) : availableProducts.length === 0 ? (
+                          <div className="col-span-2 py-8 text-center text-sm text-muted-foreground font-light">
+                            Товары не найдены
+                          </div>
+                        ) : (
+                          availableProducts.map((product) => (
+                            <button
+                              key={product.id}
+                              onClick={() => addToSlot(product)}
+                              className="group overflow-hidden rounded-2xl border border-border bg-background text-left transition-all hover:border-foreground hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)]"
+                            >
+                              <div className="aspect-square overflow-hidden bg-secondary">
+                                <img
+                                  src={product.image}
+                                  alt={product.name}
+                                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                                />
+                              </div>
+                              <div className="p-3">
+                                <p className="truncate text-sm font-medium text-foreground">{product.name}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">{formatPrice(product.price)}</p>
+                              </div>
+                            </button>
+                          ))
+                        )}
                       </div>
                     ) : (
                       <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-sm text-muted-foreground">

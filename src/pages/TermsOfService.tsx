@@ -137,7 +137,7 @@ const TermsOfService = () => {
               </p>
               <div className="mt-4 text-muted-foreground">
                 <p>Email: legal@siluet.ru</p>
-                <p>Phone: +1 (212) 555-0123</p>
+                <p>Телефон: +7 (863) 555-01-23</p>
                 <p>Address: 123 Madison Avenue, New York, NY 10016</p>
               </div>
             </section>

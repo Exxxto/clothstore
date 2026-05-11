@@ -1,74 +1,97 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 
-import { products, type Product } from "@/data/products";
-import { apiAddWishlistItem, apiGetWishlist, apiRemoveWishlistItem } from "@/lib/storeApi";
+import { type ClothingType, type Gender, type Season } from "@/lib/productCatalog";
+import { apiAddWishlistItem, apiGetWishlist, apiRemoveWishlistItem, type WishlistRow } from "@/lib/storeApi";
+
+export type FavoriteProduct = {
+  id: number;
+  name: string;
+  type: ClothingType;
+  gender: Gender;
+  price: number;
+  oldPrice?: number;
+  image: string;
+  season: Season;
+  isNew?: boolean;
+  sizes: string[];
+};
 
 const favoritesStorageKey = "clothstore.favorites.v1";
-const productById = new Map(products.map((product) => [product.id, product] as const));
 
+// Stores both IDs and full product data fetched from the server
 let cachedFavoriteIds: number[] | null = null;
+let cachedFavoriteProducts: Map<number, FavoriteProduct> = new Map();
 const listeners = new Set<() => void>();
 let syncStarted = false;
 let syncInFlight: Promise<void> | null = null;
 
-function sanitizeFavoriteIds(value: unknown) {
-  if (!Array.isArray(value)) {
-    return [] as number[];
+function resolveProductImage(row: WishlistRow): string {
+  if (row.product_image_url) {
+    return row.product_image_url;
   }
+  if (row.product_slug) {
+    return `/assets/products/catalog/${row.product_slug}.jpg`;
+  }
+  if (row.product_gender && row.product_type) {
+    return `/assets/products/catalog/${row.product_gender}-${row.product_type}-001.jpg`;
+  }
+  return "/placeholder.svg";
+}
 
+function rowToFavoriteProduct(row: WishlistRow): FavoriteProduct | null {
+  if (!row.product_name || !row.product_type || !row.product_gender || row.product_price == null) {
+    return null;
+  }
+  return {
+    id: row.product_id,
+    name: row.product_name,
+    type: row.product_type as ClothingType,
+    gender: row.product_gender as Gender,
+    price: row.product_price,
+    oldPrice: row.product_old_price ?? undefined,
+    image: resolveProductImage(row),
+    season: (row.product_season ?? "spring") as Season,
+    isNew: row.product_is_new ?? false,
+    sizes: row.product_sizes ?? [],
+  };
+}
+
+function sanitizeFavoriteIds(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
   const seen = new Set<number>();
   const result: number[] = [];
-
   for (const rawValue of value) {
     const parsed = typeof rawValue === "number" ? rawValue : Number(rawValue);
-
-    if (!Number.isFinite(parsed)) {
-      continue;
-    }
-
+    if (!Number.isFinite(parsed)) continue;
     const id = Math.trunc(parsed);
-
-    if (!productById.has(id) || seen.has(id)) {
-      continue;
-    }
-
+    if (seen.has(id)) continue;
     seen.add(id);
     result.push(id);
   }
-
   return result;
 }
 
-function readFavoriteIdsFromStorage() {
-  if (typeof window === "undefined") {
-    return [] as number[];
-  }
-
+function readFavoriteIdsFromStorage(): number[] {
+  if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(favoritesStorageKey);
-
-    if (!raw) {
-      return [] as number[];
-    }
-
+    if (!raw) return [];
     return sanitizeFavoriteIds(JSON.parse(raw));
   } catch {
-    return [] as number[];
+    return [];
   }
 }
 
-function getFavoriteIdsSnapshot() {
+function getFavoriteIdsSnapshot(): number[] {
   if (cachedFavoriteIds === null) {
     cachedFavoriteIds = readFavoriteIdsFromStorage();
   }
-
   return cachedFavoriteIds;
 }
 
 function persistFavoriteIds(nextIds: number[]) {
   const sanitized = sanitizeFavoriteIds(nextIds);
   cachedFavoriteIds = sanitized;
-
   if (typeof window !== "undefined") {
     window.localStorage.setItem(favoritesStorageKey, JSON.stringify(sanitized));
   }
@@ -85,22 +108,34 @@ function setFavoriteIds(nextIds: number[]) {
   notifySubscribers();
 }
 
+function setFavoriteIdsWithProducts(rows: WishlistRow[]) {
+  const ids: number[] = [];
+  const productMap = new Map<number, FavoriteProduct>();
+  for (const row of rows) {
+    const product = rowToFavoriteProduct(row);
+    if (product) {
+      ids.push(row.product_id);
+      productMap.set(row.product_id, product);
+    }
+  }
+  cachedFavoriteProducts = productMap;
+  persistFavoriteIds(ids);
+  notifySubscribers();
+}
+
 function subscribe(listener: () => void) {
   listeners.add(listener);
-
   return () => {
     listeners.delete(listener);
   };
 }
 
 async function syncFavoritesFromServer() {
-  if (syncInFlight) {
-    return syncInFlight;
-  }
+  if (syncInFlight) return syncInFlight;
 
   syncInFlight = apiGetWishlist()
     .then((rows) => {
-      setFavoriteIds(rows.map((row) => row.product_id));
+      setFavoriteIdsWithProducts(rows);
     })
     .catch(() => {
       // Keep local cache if API is unavailable.
@@ -113,9 +148,7 @@ async function syncFavoritesFromServer() {
 }
 
 function ensureSyncStarted() {
-  if (syncStarted) {
-    return;
-  }
+  if (syncStarted) return;
   syncStarted = true;
   void syncFavoritesFromServer();
 }
@@ -131,8 +164,8 @@ export function useFavorites() {
 
   const favoriteProducts = useMemo(() => {
     return favoriteIds
-      .map((id) => productById.get(id))
-      .filter((product): product is Product => product !== undefined);
+      .map((id) => cachedFavoriteProducts.get(id))
+      .filter((p): p is FavoriteProduct => p !== undefined);
   }, [favoriteIds]);
 
   const favoriteCount = favoriteIds.length;
@@ -147,28 +180,32 @@ export function useFavorites() {
 
     setFavoriteIds(nextIds);
 
-    void (currentlyFavorite ? apiRemoveWishlistItem(productId) : apiAddWishlistItem(productId)).catch(() => {
-      setFavoriteIds(favoriteIds);
-    });
+    void (currentlyFavorite ? apiRemoveWishlistItem(productId) : apiAddWishlistItem(productId))
+      .then((rows) => {
+        // Refresh product data from server response
+        setFavoriteIdsWithProducts(rows);
+      })
+      .catch(() => {
+        setFavoriteIds(favoriteIds);
+      });
   };
 
   const removeFavorite = (productId: number) => {
-    if (!favoriteIdSet.has(productId)) {
-      return;
-    }
-
+    if (!favoriteIdSet.has(productId)) return;
     setFavoriteIds(favoriteIds.filter((id) => id !== productId));
-    void apiRemoveWishlistItem(productId).catch(() => {
-      setFavoriteIds(favoriteIds);
-    });
+    void apiRemoveWishlistItem(productId)
+      .then((rows) => {
+        setFavoriteIdsWithProducts(rows);
+      })
+      .catch(() => {
+        setFavoriteIds(favoriteIds);
+      });
   };
 
   const clearFavorites = () => {
-    if (favoriteIds.length === 0) {
-      return;
-    }
-
+    if (favoriteIds.length === 0) return;
     setFavoriteIds([]);
+    cachedFavoriteProducts = new Map();
     void Promise.all(favoriteIds.map((productId) => apiRemoveWishlistItem(productId))).catch(() => {
       setFavoriteIds(favoriteIds);
     });

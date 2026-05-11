@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   CalendarDays,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   ImageUp,
@@ -133,14 +132,6 @@ const dateFormatter = new Intl.DateTimeFormat("ru-RU", {
   year: "numeric",
 });
 
-const dateTimeFormatter = new Intl.DateTimeFormat("ru-RU", {
-  day: "2-digit",
-  month: "long",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
 const shortDateTimeFormatter = new Intl.DateTimeFormat("ru-RU", {
   day: "2-digit",
   month: "2-digit",
@@ -149,10 +140,6 @@ const shortDateTimeFormatter = new Intl.DateTimeFormat("ru-RU", {
 
 function formatDate(value: string) {
   return dateFormatter.format(new Date(value));
-}
-
-function formatDateTime(value: string) {
-  return dateTimeFormatter.format(new Date(value));
 }
 
 function formatShortDate(value: string) {
@@ -612,20 +599,7 @@ const Account = () => {
                   </div>
                   <p className="mt-2 text-sm font-medium">{profile.phone || "Не указан"}</p>
                 </div>
-                <div className="rounded-2xl border border-border bg-card p-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CalendarDays size={16} />
-                    Создан
-                  </div>
-                  <p className="mt-2 text-sm font-medium">{formatDate(profile.created_at)}</p>
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 size={16} />
-                    Обновлён
-                  </div>
-                  <p className="mt-2 text-sm font-medium">{formatDateTime(profile.updated_at)}</p>
-                </div>
+
               </div>
 
               <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">

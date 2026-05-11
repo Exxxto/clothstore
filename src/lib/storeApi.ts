@@ -1,9 +1,19 @@
 import { getStoreSessionId } from "./storeSession";
 
-type WishlistRow = {
+export type WishlistRow = {
   id: number;
   product_id: number;
   created_at: string;
+  product_name: string | null;
+  product_type: string | null;
+  product_gender: string | null;
+  product_price: number | null;
+  product_old_price: number | null;
+  product_image_url: string | null;
+  product_slug: string | null;
+  product_season: string | null;
+  product_is_new: boolean | null;
+  product_sizes: string[] | null;
 };
 
 export type StoreCartItem = {
@@ -350,4 +360,54 @@ export async function apiDeleteAccountAddress(addressId: number) {
     method: "DELETE",
   });
   return handleResponse<StoreAddress[]>(response);
+}
+
+// ---------------------------------------------------------------------------
+// Product Reviews
+// ---------------------------------------------------------------------------
+
+export type ProductReview = {
+  id: number;
+  product_id: number;
+  author_name: string;
+  rating: number;
+  body: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductReviewsResponse = {
+  reviews: ProductReview[];
+  avg_rating: number | null;
+  review_count: number;
+};
+
+export async function apiGetProductReviews(productId: number) {
+  const response = await fetch(`/api/products/${productId}/reviews`);
+  return handleResponse<ProductReviewsResponse>(response);
+}
+
+export async function apiGetMyReview(productId: number) {
+  const sessionId = getStoreSessionId();
+  const response = await fetch(
+    `/api/products/${productId}/reviews/my?session_id=${encodeURIComponent(sessionId)}`
+  );
+  return handleResponse<ProductReview | null>(response);
+}
+
+export async function apiSubmitProductReview(productId: number, data: {
+  author_name: string;
+  rating: number;
+  body: string;
+}) {
+  const response = await fetch(`/api/products/${productId}/reviews`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_id: getStoreSessionId(),
+      ...data,
+    }),
+  });
+  return handleResponse<ProductReview>(response);
 }

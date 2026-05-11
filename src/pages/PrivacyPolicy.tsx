@@ -122,8 +122,8 @@ const PrivacyPolicy = () => {
               </p>
               <div className="mt-4 text-muted-foreground">
                 <p>Email: privacy@siluet.ru</p>
-                <p>Phone: +1 (212) 555-0123</p>
-                <p>Address: 123 Madison Avenue, New York, NY 10016</p>
+                <p>Телефон: +7 (863) 555-01-23</p>
+                <p>Адрес: г. Ростов-на-Дону, ул. Большая Садовая, д. 1</p>
               </div>
             </section>
           </div>

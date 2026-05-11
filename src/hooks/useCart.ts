@@ -122,8 +122,20 @@ export function useCart() {
   const cartProducts = useMemo(() => {
     return cart.items.map((item) => {
       const product = item.product_id ? productById.get(item.product_id) : undefined;
+
+      // Derive a fallback image_url from slug pattern if server didn't provide one
+      let image_url = item.image_url;
+      if (!image_url) {
+        if (product?.image) {
+          image_url = product.image;
+        } else if (item.product_gender && item.product_type) {
+          image_url = `/assets/products/catalog/${item.product_gender}-${item.product_type}-001.jpg`;
+        }
+      }
+
       return {
         ...item,
+        image_url,
         product,
       };
     });

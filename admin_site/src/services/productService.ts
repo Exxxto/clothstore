@@ -30,6 +30,7 @@ export async function createProduct(
     is_new?: boolean;
     sizes?: string[];
     description?: string;
+    material?: string | null;
   },
   adminId: number | null,
   ipAddress: string | undefined
@@ -49,6 +50,7 @@ export async function createProduct(
     is_new: data.is_new ?? false,
     sizes: data.sizes ?? [],
     description: data.description ?? "",
+    material: data.material ?? null,
   });
 
   await logAuditAction({
@@ -90,6 +92,7 @@ export async function updateProduct(
     is_new?: boolean;
     sizes?: string[];
     description?: string;
+    material?: string | null;
   },
   adminId: number | null,
   ipAddress: string | undefined
@@ -112,6 +115,7 @@ export async function updateProduct(
     is_new: data.is_new ?? false,
     sizes: data.sizes ?? [],
     description: data.description ?? "",
+    material: data.material ?? null,
   });
 
   await logAuditAction({

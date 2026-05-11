@@ -699,6 +699,34 @@ export async function initDB() {
       CREATE INDEX IF NOT EXISTS order_status_history_order_idx ON order_status_history(order_id, created_at DESC);
     `);
 
+    // Таблица отзывов о товарах
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS product_reviews (
+        id SERIAL PRIMARY KEY,
+        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        session_id VARCHAR(120),
+        author_name VARCHAR(255) NOT NULL,
+        rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+        body TEXT NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'published',
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    // Миграция: добавить session_id если таблица уже существует без него
+    await client.query(`
+      ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS session_id VARCHAR(120)
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS product_reviews_product_id_idx ON product_reviews(product_id, created_at DESC);
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS product_reviews_status_idx ON product_reviews(status);
+    `);
+
     // Сид товаров — отключён, товары управляются вручную через админку
     // await seedProducts(client);
     await syncProductImages(client);

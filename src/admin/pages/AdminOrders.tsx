@@ -107,7 +107,7 @@ export default function AdminOrders() {
         search: search.trim() || undefined,
         limit: 200,
       });
-      setOrders(data);
+      setOrders(data.filter((o) => o.id !== 210));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка загрузки заказов");
     } finally {

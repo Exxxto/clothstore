@@ -20,10 +20,8 @@ const CheckoutHeader = () => {
             СИЛУЭТ
           </Link>
 
-          {/* Справа - поддержка */}
-          <div className="text-sm font-light text-foreground">
-            Поддержка
-          </div>
+          {/* Справа - пустой placeholder для симметрии */}
+          <div className="w-[7rem]" />
         </div>
       </div>
     </header>

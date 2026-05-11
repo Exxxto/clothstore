@@ -10,27 +10,27 @@ interface Store {
 const stores: Store[] = [
   {
     name: "Силуэт на Тверской",
-    address: "789 Madison Avenue, New York, NY 10065",
-    phone: "+1 (212) 555-0123",
-    hours: "Mon-Sat: 10AM-8PM, Sun: 12PM-6PM",
-    lat: 40.7614,
-    lng: -73.9776
+    address: "г. Москва, ул. Тверская, д. 1",
+    phone: "+7 (863) 555-01-23",
+    hours: "Пн-Сб: 10:00-20:00, Вс: 12:00-18:00",
+    lat: 55.7617,
+    lng: 37.6073
   },
   {
     name: "Силуэт Арбат",
-    address: "456 Rodeo Drive, Beverly Hills, CA 90210",
-    phone: "+1 (310) 555-0456",
-    hours: "Mon-Sat: 10AM-8PM, Sun: 12PM-6PM",
-    lat: 34.0696,
-    lng: -118.4014
+    address: "г. Москва, ул. Арбат, д. 10",
+    phone: "+7 (863) 555-04-56",
+    hours: "Пн-Сб: 10:00-20:00, Вс: 12:00-18:00",
+    lat: 55.7520,
+    lng: 37.5921
   },
   {
     name: "Силуэт Невский",
-    address: "123 Spring Street, New York, NY 10012", 
-    phone: "+1 (212) 555-0789",
-    hours: "Mon-Sat: 11AM-8PM, Sun: 12PM-7PM",
-    lat: 40.7253,
-    lng: -74.0022
+    address: "г. Санкт-Петербург, Невский пр., д. 50",
+    phone: "+7 (863) 555-07-89",
+    hours: "Пн-Сб: 11:00-20:00, Вс: 12:00-19:00",
+    lat: 59.9311,
+    lng: 30.3609
   }
 ];
 
