@@ -2,6 +2,7 @@ import { Heart, X, Search, UserRound, ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import ShoppingBag from "./ShoppingBag";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 import { CATEGORY_SLUGS } from "@/lib/categoryRoutes";
 import { QUICK_CATEGORY_LINKS } from "@/lib/categoryCatalog";
 import { formatPrice, genderLabels, products, typeLabels } from "@/data/products";
@@ -118,12 +119,7 @@ const Navigation = () => {
   }, [searchQuery]);
 
   return (
-    <nav
-      className="relative backdrop-blur-md"
-      style={{
-        backgroundColor: "rgba(255, 255, 255, 0.82)",
-      }}
-    >
+    <nav className="relative bg-background/80 backdrop-blur-md">
       <div className="flex h-16 items-center justify-between px-4 md:px-5 lg:px-6">
         {/* Mobile hamburger */}
         <button
@@ -188,6 +184,7 @@ const Navigation = () => {
 
         {/* Right icons */}
         <div className="flex items-center gap-1 md:gap-2">
+          <ThemeToggle />
           <button
             className="p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 rounded-full border border-transparent hover:border-border/70 hover:bg-background/70"
             aria-label="Поиск"

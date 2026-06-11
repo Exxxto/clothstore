@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 const CheckoutHeader = () => {
   return (
@@ -20,8 +21,9 @@ const CheckoutHeader = () => {
             СИЛУЭТ
           </Link>
 
-          {/* Справа - пустой placeholder для симметрии */}
-          <div className="w-[7rem]" />
+          <div className="flex w-[7rem] justify-end">
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </header>

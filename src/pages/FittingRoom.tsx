@@ -252,7 +252,7 @@ const FittingRoom = () => {
                             }`}
                           >
                             <Plus size={14} />
-                            {selectedAudience ? "Добавить" : "Сначала выберите аудиторию"}
+                            {selectedAudience ? "Добавить" : "Выберите для кого"}
                           </button>
                         )}
                       </div>

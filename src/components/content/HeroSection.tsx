@@ -21,7 +21,7 @@ const HeroSection = () => {
     <section ref={ref} className="w-full px-6 pt-4 pb-2">
       <div className="relative overflow-hidden rounded-[2rem] border border-border/70 shadow-[0_24px_80px_rgba(0,0,0,0.12)]">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.58),rgba(0,0,0,0.18),rgba(0,0,0,0.08))]" />
-        <img src={heroWomen} alt="Новая коллекция одежды" className="h-[72vh] min-h-[560px] w-full object-cover" />
+        <img src={heroWomen} alt="Осенняя коллекция одежды" className="h-[72vh] min-h-[560px] w-full object-cover" />
         <div className="absolute inset-0 flex items-end">
           <div
             className={`w-full p-6 md:p-10 lg:p-12 transition-all duration-700 ease-out ${
@@ -31,18 +31,18 @@ const HeroSection = () => {
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.22em] text-white/75">
                 <Sparkles size={14} strokeWidth={1.75} />
-                Весна / Лето 2026
+                Осень 2026
               </div>
               <h1 className="mt-5 text-4xl md:text-6xl font-light leading-[0.95] text-white" style={{ textWrap: "balance" }}>
-                Новая коллекция в спокойной карточной подаче.
+                Осенняя коллекция
               </h1>
               <p className="mt-5 max-w-xl text-sm md:text-base font-light text-white">
-                Чистые силуэты, выразительные материалы и мягкая редакционная композиция для главной страницы.
+                Куртки, пальто и свитеры для прохладной погоды.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Link
                   to={`/category/${CATEGORY_SLUGS.all}`}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-medium text-foreground transition-transform duration-200 hover:scale-[0.98]"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-medium text-zinc-950 transition-transform duration-200 hover:scale-[0.98]"
                 >
                   Смотреть каталог
                   <ArrowRight size={14} />

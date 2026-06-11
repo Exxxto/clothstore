@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiGetComplaints } from "@/admin/api";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 interface AdminSidebarProps {
   username: string;
@@ -134,16 +135,16 @@ export default function AdminSidebar({ username, fullName, role, onLogout }: Adm
   };
 
   return (
-    <aside className="w-64 min-h-screen bg-gray-950 border-r border-gray-800 flex flex-col">
+    <aside className="w-64 min-h-screen border-r bg-[hsl(var(--admin-sidebar))] border-[hsl(var(--admin-border))] flex flex-col">
       {/* Logo */}
-      <div className="px-6 py-5 border-b border-gray-800">
+      <div className="px-6 py-5 border-b border-[hsl(var(--admin-border))]">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-gray-900 font-bold text-xs">L</span>
+          <div className="w-8 h-8 bg-[hsl(var(--admin-primary))] rounded-lg flex items-center justify-center">
+            <span className="text-[hsl(var(--admin-primary-foreground))] font-bold text-xs">L</span>
           </div>
           <div>
-            <p className="text-white font-semibold text-sm tracking-wide">Силуэт</p>
-            <p className="text-gray-500 text-xs">Панель администратора</p>
+            <p className="text-[hsl(var(--admin-foreground))] font-semibold text-sm tracking-wide">Силуэт</p>
+            <p className="text-[hsl(var(--admin-muted-foreground))] text-xs">Панель администратора</p>
           </div>
         </div>
       </div>
@@ -159,14 +160,21 @@ export default function AdminSidebar({ username, fullName, role, onLogout }: Adm
               cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group",
                 isActive
-                  ? "bg-white text-gray-900"
-                  : "text-gray-400 hover:text-white hover:bg-gray-800"
+                  ? "bg-[hsl(var(--admin-primary))] text-[hsl(var(--admin-primary-foreground))]"
+                  : "text-[hsl(var(--admin-muted-foreground))] hover:text-[hsl(var(--admin-foreground))] hover:bg-[hsl(var(--admin-hover))]"
               )
             }
           >
             {({ isActive }) => (
               <>
-                <item.icon className={cn("w-4 h-4 flex-shrink-0", isActive ? "text-gray-900" : "text-gray-500 group-hover:text-white")} />
+                <item.icon
+                  className={cn(
+                    "w-4 h-4 flex-shrink-0",
+                    isActive
+                      ? "text-[hsl(var(--admin-primary-foreground))]"
+                      : "text-[hsl(var(--admin-muted-foreground))] group-hover:text-[hsl(var(--admin-foreground))]",
+                  )}
+                />
                 <span className="flex-1">{item.label}</span>
                 {item.href === "/admin/complaints" && (
                   <span
@@ -174,7 +182,7 @@ export default function AdminSidebar({ username, fullName, role, onLogout }: Adm
                       "inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold",
                       newComplaintsCount > 0
                         ? "bg-rose-500/15 text-rose-300"
-                        : "bg-gray-700 text-gray-300"
+                        : "bg-[hsl(var(--admin-muted))] text-[hsl(var(--admin-muted-foreground))]"
                     )}
                   >
                     {newComplaintsCount}
@@ -188,19 +196,23 @@ export default function AdminSidebar({ username, fullName, role, onLogout }: Adm
       </nav>
 
       {/* User info + logout */}
-      <div className="px-3 py-4 border-t border-gray-800">
+      <div className="px-3 py-4 border-t border-[hsl(var(--admin-border))]">
+        <div className="mb-3 flex items-center justify-between rounded-lg border border-[hsl(var(--admin-border))] px-3 py-2">
+          <span className="text-xs font-medium text-[hsl(var(--admin-muted-foreground))]">Тема</span>
+          <ThemeToggle className="h-8 w-8 border-[hsl(var(--admin-border))] text-[hsl(var(--admin-muted-foreground))] hover:border-[hsl(var(--admin-foreground))]/30 hover:bg-[hsl(var(--admin-hover))] hover:text-[hsl(var(--admin-foreground))]" />
+        </div>
         <div className="flex items-center gap-3 px-3 py-2 mb-2">
-          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
-            <User className="w-4 h-4 text-gray-300" />
+          <div className="w-8 h-8 bg-[hsl(var(--admin-muted))] rounded-full flex items-center justify-center">
+            <User className="w-4 h-4 text-[hsl(var(--admin-muted-foreground))]" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-sm font-medium truncate">{fullName || username}</p>
-            <p className="text-gray-500 text-xs capitalize">{role === "superadmin" ? "Супер-админ" : "Администратор"}</p>
+            <p className="text-[hsl(var(--admin-foreground))] text-sm font-medium truncate">{fullName || username}</p>
+            <p className="text-[hsl(var(--admin-muted-foreground))] text-xs capitalize">{role === "superadmin" ? "Супер-админ" : "Администратор"}</p>
           </div>
         </div>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-950/30 transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[hsl(var(--admin-muted-foreground))] hover:text-red-400 hover:bg-red-950/30 transition-all"
         >
           <LogOut className="w-4 h-4" />
           <span>Выйти</span>

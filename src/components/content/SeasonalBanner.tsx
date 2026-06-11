@@ -37,7 +37,7 @@ const SeasonalBanner = () => {
             Сезонная коллекция
           </div>
           <h2 className="text-2xl md:text-3xl font-light text-foreground leading-tight">
-            Весна / Лето 2026
+            Осень 2026
           </h2>
           <p className="text-sm font-light text-muted-foreground leading-relaxed">
             Лёгкие ткани, природные оттенки и свободный крой — коллекция, созданная для тёплых дней и долгих прогулок.

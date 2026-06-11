@@ -15,7 +15,7 @@ export default function AdminLayout({ isAuthenticated, username, fullName, role,
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-900">
+    <div className="admin-shell flex min-h-screen bg-[hsl(var(--admin-background))] text-[hsl(var(--admin-foreground))]">
       <AdminSidebar username={username} fullName={fullName} role={role} onLogout={onLogout} />
       <main className="flex-1 overflow-auto">
         <Outlet />

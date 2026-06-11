@@ -69,6 +69,18 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --admin-background: 0 0% 96%;
+    --admin-foreground: 0 0% 9%;
+    --admin-sidebar: 0 0% 100%;
+    --admin-card: 0 0% 100%;
+    --admin-input: 0 0% 100%;
+    --admin-muted: 0 0% 92%;
+    --admin-muted-foreground: 0 0% 42%;
+    --admin-border: 0 0% 86%;
+    --admin-hover: 0 0% 94%;
+    --admin-primary: 0 0% 9%;
+    --admin-primary-foreground: 0 0% 98%;
   }
 
   .dark {
@@ -107,6 +119,27 @@
     
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
+
+    --sidebar-background: 0 0% 11%;
+    --sidebar-foreground: 0 0% 86%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 9%;
+    --sidebar-accent: 0 0% 16%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 0 0% 86%;
+
+    --admin-background: 0 0% 11%;
+    --admin-foreground: 0 0% 98%;
+    --admin-sidebar: 0 0% 3.9%;
+    --admin-card: 0 0% 16%;
+    --admin-input: 0 0% 16%;
+    --admin-muted: 0 0% 24%;
+    --admin-muted-foreground: 0 0% 64%;
+    --admin-border: 0 0% 12%;
+    --admin-hover: 0 0% 16%;
+    --admin-primary: 0 0% 100%;
+    --admin-primary-foreground: 0 0% 9%;
   }
 }
 
@@ -118,5 +151,88 @@
   body {
     @apply bg-background text-foreground font-light;
     overflow-x: hidden;
+  }
+}
+
+@layer components {
+  :root:not(.dark) .admin-shell .bg-gray-800,
+  :root:not(.dark) .admin-shell .bg-gray-800\/50,
+  :root:not(.dark) .admin-shell .bg-gray-800\/60,
+  :root:not(.dark) .admin-shell .bg-gray-800\/70,
+  :root:not(.dark) .admin-shell .bg-gray-900,
+  :root:not(.dark) .admin-shell .bg-gray-950,
+  :root:not(.dark) .admin-shell .bg-gray-700,
+  :root:not(.dark) .admin-shell .bg-gray-700\/50 {
+    background-color: hsl(0 0% 100%) !important;
+  }
+
+  :root:not(.dark) .admin-shell .bg-gray-700 {
+    background-color: hsl(0 0% 92%) !important;
+  }
+
+  :root:not(.dark) .admin-shell .text-white,
+  :root:not(.dark) .admin-shell .text-gray-100,
+  :root:not(.dark) .admin-shell .text-gray-200,
+  :root:not(.dark) .admin-shell .text-gray-300,
+  :root:not(.dark) .admin-shell .text-gray-900 {
+    color: hsl(0 0% 9%) !important;
+  }
+
+  :root:not(.dark) .admin-shell .text-gray-400,
+  :root:not(.dark) .admin-shell .text-gray-500,
+  :root:not(.dark) .admin-shell .text-gray-600 {
+    color: hsl(0 0% 42%) !important;
+  }
+
+  :root:not(.dark) .admin-shell .border-gray-800,
+  :root:not(.dark) .admin-shell .border-gray-700,
+  :root:not(.dark) .admin-shell .border-gray-600 {
+    border-color: hsl(0 0% 88%) !important;
+  }
+
+  :root:not(.dark) .admin-shell .placeholder\:text-gray-500::placeholder {
+    color: hsl(0 0% 58%) !important;
+  }
+
+  :root:not(.dark) .admin-shell .focus\:border-white:focus {
+    border-color: hsl(0 0% 9%) !important;
+  }
+
+  :root:not(.dark) .admin-shell .hover\:bg-gray-800:hover,
+  :root:not(.dark) .admin-shell .hover\:bg-gray-700:hover,
+  :root:not(.dark) .admin-shell .hover\:bg-gray-100:hover {
+    background-color: hsl(0 0% 94%) !important;
+  }
+
+  :root:not(.dark) .admin-shell .hover\:text-white:hover,
+  :root:not(.dark) .admin-shell .group:hover .group-hover\:text-white {
+    color: hsl(0 0% 9%) !important;
+  }
+
+  :root:not(.dark) .admin-shell .shadow-2xl,
+  :root:not(.dark) .admin-shell .shadow-xl,
+  :root:not(.dark) .admin-shell .shadow-lg {
+    box-shadow: 0 18px 50px rgb(0 0 0 / 0.08) !important;
+  }
+
+  :root:not(.dark) .admin-shell .bg-red-950 {
+    background-color: hsl(0 85% 96%) !important;
+  }
+
+  :root:not(.dark) .admin-shell .border-red-800 {
+    border-color: hsl(0 70% 82%) !important;
+  }
+
+  :root:not(.dark) .admin-shell .text-red-300 {
+    color: hsl(0 72% 40%) !important;
+  }
+
+  :root:not(.dark) .admin-shell .bg-rose-500\/15 {
+    background-color: hsl(350 89% 96%) !important;
+  }
+
+  :root:not(.dark) .admin-shell .text-rose-300,
+  :root:not(.dark) .admin-shell .text-rose-400 {
+    color: hsl(345 83% 41%) !important;
   }
 }

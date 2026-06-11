@@ -205,7 +205,7 @@ export default function AdminAnalytics() {
               <BarChart3 className="h-3.5 w-3.5" />
               Аналитика
             </div>
-            <h1 className="mt-4 text-3xl font-bold text-white">Показатели магазина по половому срезу</h1>
+            <h1 className="mt-4 text-3xl font-bold text-white">Показатели магазина по гендерной принадлежности</h1>
             <p className="mt-3 text-sm text-gray-300">
               Переключайте пол, чтобы видеть отдельную выручку, заказы, топ товаров и динамику для выбранной аудитории.
               Жалобы остаются общими, потому что у них нет привязки к полу товара.

@@ -428,11 +428,8 @@ const Checkout = () => {
             </div>
             <div className="mt-5 max-w-3xl">
               <h1 className="text-3xl md:text-5xl font-light tracking-tight text-foreground">
-                Оформление заказа как серия аккуратных карточек, без визуального шума.
+                Оформление заказа
               </h1>
-              <p className="mt-4 text-sm md:text-base text-muted-foreground max-w-2xl">
-                Вся форма разделена на понятные блоки: данные покупателя, доставка, оплата и сводка заказа.
-              </p>
             </div>
           </div>
 
@@ -764,10 +761,6 @@ const Checkout = () => {
 
                       {cardPaymentRequired ? (
                         <>
-                          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                            Mock-оплата: эти поля нужны только для тестового сценария. Данные карты не отправляются платёжному провайдеру, а заказ будет отмечен как оплаченный через `mock-card`.
-                          </div>
-
                           {savedCards.length > 0 && (
                             <div className="rounded-2xl border border-border bg-background/60 p-4 space-y-4">
                               <div className="flex items-start gap-3">
@@ -915,7 +908,7 @@ const Checkout = () => {
                     <img src={cartItems[0]?.image_url || cartItems[0]?.product?.image || "/placeholder.svg"} alt="Order preview" className="w-full h-full object-cover" />
                   </div>
                   <div className="pt-2">
-                    <CardTitle className="text-xl font-light">Сводка заказа</CardTitle>
+                    <CardTitle className="text-xl font-light">Корзина</CardTitle>
                     <CardDescription>{cartItems.length} позиции в корзине</CardDescription>
                   </div>
                 </CardHeader>
