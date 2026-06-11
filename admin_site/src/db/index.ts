@@ -1,4 +1,4 @@
-import { Pool, type PoolClient } from "pg";
+import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
 import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
@@ -37,6 +37,13 @@ function buildVariantName(productName: string, size: string | null) {
 
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: {
+    // Обязательно для Supabase — без этого соединение будет отклонено
+    rejectUnauthorized: false,
+  },
+  max: 10,                    // Максимум соединений (оптимально для бесплатного тарифа Supabase)
+  idleTimeoutMillis: 30000,   // Закрывать неактивные соединения через 30 сек
+  connectionTimeoutMillis: 2000, // Таймаут на подключение
 });
 
 export async function initDB() {
@@ -1440,4 +1447,43 @@ export async function syncProductImages(client: Pick<PoolClient, "query">) {
   }
 
   logger.info("✅ Product images synchronized");
+}
+
+/**
+ * Хелпер для простых одиночных запросов.
+ * Сама берёт клиент из пула и возвращает его обратно.
+ *
+ * @example
+ * import { query } from "../db";
+ * const { rows } = await query<{ id: number; name: string }>(
+ *   "SELECT * FROM products WHERE id = $1", [id]
+ * );
+ */
+export async function query<T extends QueryResultRow = QueryResultRow>(
+  text: string,
+  params?: unknown[]
+): Promise<QueryResult<T>> {
+  return pool.query<T>(text, params);
+}
+
+/**
+ * Хелпер для получения изолированного клиента.
+ * Необходим для транзакций (BEGIN / COMMIT / ROLLBACK).
+ * ВАЖНО: обязательно вызывай client.release() в блоке finally!
+ *
+ * @example
+ * const client = await getClient();
+ * try {
+ *   await client.query("BEGIN");
+ *   // ...запросы
+ *   await client.query("COMMIT");
+ * } catch (e) {
+ *   await client.query("ROLLBACK");
+ *   throw e;
+ * } finally {
+ *   client.release();
+ * }
+ */
+export async function getClient(): Promise<PoolClient> {
+  return pool.connect();
 }
