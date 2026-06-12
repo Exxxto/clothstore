@@ -21,9 +21,6 @@ const CLOTHING_CATEGORIES = [
   { label: "Рубашки", slug: CATEGORY_SLUGS.shirts },
   { label: "Худи", slug: CATEGORY_SLUGS.hoodies },
   { label: "Юбки", slug: CATEGORY_SLUGS.skirts },
-  { label: "Серьги", slug: CATEGORY_SLUGS.earrings },
-  { label: "Браслеты", slug: CATEGORY_SLUGS.bracelets },
-  { label: "Колье", slug: CATEGORY_SLUGS.necklaces },
 ];
 
 const normalizeSearchText = (value: string) =>

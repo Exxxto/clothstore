@@ -18,10 +18,6 @@ export const CATEGORY_SLUGS = {
   shirts: "shirts",
   hoodies: "hoodies",
   skirts: "skirts",
-  earrings: "earrings",
-  bracelets: "bracelets",
-  rings: "rings",
-  necklaces: "necklaces",
 } as const;
 
 const CATEGORY_ALIASES: Record<string, string> = {
@@ -66,10 +62,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   [CATEGORY_SLUGS.shirts]: "Рубашки",
   [CATEGORY_SLUGS.hoodies]: "Худи",
   [CATEGORY_SLUGS.skirts]: "Юбки",
-  [CATEGORY_SLUGS.earrings]: "Серьги",
-  [CATEGORY_SLUGS.bracelets]: "Браслеты",
-  [CATEGORY_SLUGS.rings]: "Кольца",
-  [CATEGORY_SLUGS.necklaces]: "Колье",
 };
 
 const CATEGORY_FILTER_VALUES: Record<string, string> = {

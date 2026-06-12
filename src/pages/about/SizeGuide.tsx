@@ -2,106 +2,250 @@ import Header from "../../components/header/Header";
 import Footer from "../../components/footer/Footer";
 import PageHeader from "../../components/about/PageHeader";
 import ContentSection from "../../components/about/ContentSection";
-import { Button } from "../../components/ui/button";
 import AboutSidebar from "../../components/about/AboutSidebar";
+
+const MEN_SIZE_TABLE = [
+  { size: "S", chest: "92–96", waist: "78–82", hips: "94–98" },
+  { size: "M", chest: "97–101", waist: "83–87", hips: "99–103" },
+  { size: "L", chest: "102–106", waist: "88–93", hips: "104–108" },
+  { size: "XL", chest: "107–112", waist: "94–99", hips: "109–114" },
+  { size: "XXL", chest: "113–118", waist: "100–106", hips: "115–120" },
+];
+
+const MEN_JEANS_TABLE = [
+  { size: "28", waist_cm: "71–74", height: "170–175" },
+  { size: "30", waist_cm: "76–79", height: "175–180" },
+  { size: "32", waist_cm: "81–84", height: "180–185" },
+  { size: "34", waist_cm: "86–89", height: "185–190" },
+  { size: "36", waist_cm: "91–94", height: "190–195" },
+];
+
+const WOMEN_SIZE_TABLE = [
+  { size: "XS", chest: "80–84", waist: "62–66", hips: "88–92", ru: "40" },
+  { size: "S", chest: "85–89", waist: "67–71", hips: "93–97", ru: "42" },
+  { size: "M", chest: "90–94", waist: "72–76", hips: "98–102", ru: "44–46" },
+  { size: "L", chest: "95–99", waist: "77–82", hips: "103–107", ru: "48" },
+  { size: "XL", chest: "100–105", waist: "83–88", hips: "108–113", ru: "50" },
+];
+
+const WOMEN_JEANS_TABLE = [
+  { size: "24", waist_cm: "61–64", height: "160–165" },
+  { size: "26", waist_cm: "65–68", height: "165–170" },
+  { size: "28", waist_cm: "69–72", height: "170–175" },
+  { size: "30", waist_cm: "73–76", height: "175–180" },
+  { size: "32", waist_cm: "77–80", height: "180–185" },
+];
+
+const KIDS_SIZE_TABLE = [
+  { ru: "104", height_cm: "99–104", age: "3–4" },
+  { ru: "110", height_cm: "105–110", age: "4–5" },
+  { ru: "116", height_cm: "111–116", age: "5–6" },
+  { ru: "122", height_cm: "117–122", age: "6–7" },
+  { ru: "128", height_cm: "123–128", age: "7–8" },
+];
+
+const SHOE_SIZE_TABLE = [
+  { ru: "36", foot_cm: "23.0" },
+  { ru: "37", foot_cm: "23.8" },
+  { ru: "38", foot_cm: "24.5" },
+  { ru: "39", foot_cm: "25.1" },
+  { ru: "40", foot_cm: "25.8" },
+  { ru: "41", foot_cm: "26.5" },
+  { ru: "42", foot_cm: "27.1" },
+  { ru: "43", foot_cm: "27.8" },
+  { ru: "44", foot_cm: "28.5" },
+  { ru: "45", foot_cm: "29.1" },
+];
 
 const SizeGuide = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="flex">
         <div className="hidden lg:block">
           <AboutSidebar />
         </div>
-        
+
         <main className="w-full lg:w-[70vw] lg:ml-auto px-6">
-        <PageHeader 
-          title="Гид по размерам" 
-          subtitle="Подберите идеальную посадку с помощью нашего подробного гида по размерам"
-        />
-        
-        <ContentSection title="Размеры колец">
-          <div className="space-y-8">
-            <div className="bg-muted/10 rounded-lg p-8">
-              <h3 className="text-xl font-light text-foreground mb-6">Как измерить размер кольца</h3>
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <h4 className="font-medium text-foreground">Способ 1: с помощью кольца, которое у вас уже есть</h4>
-                  <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-                    <li>Возьмите кольцо, которое удобно сидит на нужном пальце</li>
-                    <li>Положите его на линейку и измерьте внутренний диаметр в миллиметрах</li>
-                    <li>Сопоставьте результат с таблицей размеров ниже</li>
-                  </ol>
+          <PageHeader
+            title="Гид по размерам"
+            subtitle="Подберите идеальную посадку с помощью нашего подробного гида"
+          />
+
+          <ContentSection title="Мужская одежда">
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-lg font-light text-foreground mb-4">Верхняя одежда, футболки, свитеры, худи</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-border">
+                    <thead>
+                      <tr className="bg-muted/20">
+                        <th className="border border-border p-3 text-left font-light">Размер</th>
+                        <th className="border border-border p-3 text-left font-light">Грудь (см)</th>
+                        <th className="border border-border p-3 text-left font-light">Талия (см)</th>
+                        <th className="border border-border p-3 text-left font-light">Бёдра (см)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {MEN_SIZE_TABLE.map((row) => (
+                        <tr key={row.size} className="hover:bg-muted/10">
+                          <td className="border border-border p-3 font-medium">{row.size}</td>
+                          <td className="border border-border p-3">{row.chest}</td>
+                          <td className="border border-border p-3">{row.waist}</td>
+                          <td className="border border-border p-3">{row.hips}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="space-y-4">
-                  <h4 className="font-medium text-foreground">Способ 2: с помощью нитки или бумаги</h4>
-                  <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-                    <li>Оберните нитку или полоску бумаги вокруг пальца в месте посадки кольца</li>
-                    <li>Отметьте место, где материал накладывается сам на себя</li>
-                    <li>Измерьте длину в миллиметрах</li>
-                    <li>Разделите на 3,14, чтобы получить диаметр</li>
-                  </ol>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-light text-foreground mb-4">Джинсы и брюки</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-border">
+                    <thead>
+                      <tr className="bg-muted/20">
+                        <th className="border border-border p-3 text-left font-light">Размер</th>
+                        <th className="border border-border p-3 text-left font-light">Талия (см)</th>
+                        <th className="border border-border p-3 text-left font-light">Рост (см)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {MEN_JEANS_TABLE.map((row) => (
+                        <tr key={row.size} className="hover:bg-muted/10">
+                          <td className="border border-border p-3 font-medium">{row.size}</td>
+                          <td className="border border-border p-3">{row.waist_cm}</td>
+                          <td className="border border-border p-3">{row.height}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
+          </ContentSection>
 
+          <ContentSection title="Женская одежда">
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-lg font-light text-foreground mb-4">Верхняя одежда, платья, свитеры, юбки</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-border">
+                    <thead>
+                      <tr className="bg-muted/20">
+                        <th className="border border-border p-3 text-left font-light">Размер</th>
+                        <th className="border border-border p-3 text-left font-light">Грудь (см)</th>
+                        <th className="border border-border p-3 text-left font-light">Талия (см)</th>
+                        <th className="border border-border p-3 text-left font-light">Бёдра (см)</th>
+                        <th className="border border-border p-3 text-left font-light">RU</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {WOMEN_SIZE_TABLE.map((row) => (
+                        <tr key={row.size} className="hover:bg-muted/10">
+                          <td className="border border-border p-3 font-medium">{row.size}</td>
+                          <td className="border border-border p-3">{row.chest}</td>
+                          <td className="border border-border p-3">{row.waist}</td>
+                          <td className="border border-border p-3">{row.hips}</td>
+                          <td className="border border-border p-3">{row.ru}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-light text-foreground mb-4">Джинсы и брюки</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-border">
+                    <thead>
+                      <tr className="bg-muted/20">
+                        <th className="border border-border p-3 text-left font-light">Размер</th>
+                        <th className="border border-border p-3 text-left font-light">Талия (см)</th>
+                        <th className="border border-border p-3 text-left font-light">Рост (см)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {WOMEN_JEANS_TABLE.map((row) => (
+                        <tr key={row.size} className="hover:bg-muted/10">
+                          <td className="border border-border p-3 font-medium">{row.size}</td>
+                          <td className="border border-border p-3">{row.waist_cm}</td>
+                          <td className="border border-border p-3">{row.height}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </ContentSection>
+
+          <ContentSection title="Детская одежда">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-border">
                 <thead>
                   <tr className="bg-muted/20">
-                    <th className="border border-border p-3 text-left font-light">Размер US</th>
-                    <th className="border border-border p-3 text-left font-light">Размер UK</th>
-                    <th className="border border-border p-3 text-left font-light">Размер EU</th>
-                    <th className="border border-border p-3 text-left font-light">Диаметр (мм)</th>
-                    <th className="border border-border p-3 text-left font-light">Окружность (мм)</th>
+                    <th className="border border-border p-3 text-left font-light">Размер (RU)</th>
+                    <th className="border border-border p-3 text-left font-light">Рост (см)</th>
+                    <th className="border border-border p-3 text-left font-light">Возраст</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    { us: "5", uk: "J", eu: "49", diameter: "15.6", circumference: "49.0" },
-                    { us: "5.5", uk: "K", eu: "50", diameter: "16.0", circumference: "50.2" },
-                    { us: "6", uk: "L", eu: "51", diameter: "16.4", circumference: "51.5" },
-                    { us: "6.5", uk: "M", eu: "52", diameter: "16.8", circumference: "52.8" },
-                    { us: "7", uk: "N", eu: "54", diameter: "17.2", circumference: "54.0" },
-                    { us: "7.5", uk: "O", eu: "55", diameter: "17.6", circumference: "55.3" },
-                    { us: "8", uk: "P", eu: "56", diameter: "18.0", circumference: "56.5" },
-                    { us: "8.5", uk: "Q", eu: "57", diameter: "18.4", circumference: "57.8" },
-                    { us: "9", uk: "R", eu: "59", diameter: "18.8", circumference: "59.1" }
-                  ].map((size, index) => (
-                    <tr key={index} className="hover:bg-muted/10">
-                      <td className="border border-border p-3">{size.us}</td>
-                      <td className="border border-border p-3">{size.uk}</td>
-                      <td className="border border-border p-3">{size.eu}</td>
-                      <td className="border border-border p-3">{size.diameter}</td>
-                      <td className="border border-border p-3">{size.circumference}</td>
+                  {KIDS_SIZE_TABLE.map((row) => (
+                    <tr key={row.ru} className="hover:bg-muted/10">
+                      <td className="border border-border p-3 font-medium">{row.ru}</td>
+                      <td className="border border-border p-3">{row.height_cm}</td>
+                      <td className="border border-border p-3">{row.age}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
-        </ContentSection>
+          </ContentSection>
 
-        <ContentSection title="Нужна помощь?">
-          <div className="space-y-6">
-            <p className="text-muted-foreground">
-              Всё ещё сомневаетесь в размере? Наши консультанты помогут подобрать идеальную посадку.
-              Скачайте наш гид в PDF или запишитесь на виртуальную консультацию.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="outline" className="rounded-none">
-                Скачать гид в PDF
-              </Button>
-              <Button className="rounded-none">
-                Записаться на консультацию
-              </Button>
+          <ContentSection title="Обувь">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-border">
+                <thead>
+                  <tr className="bg-muted/20">
+                    <th className="border border-border p-3 text-left font-light">Размер (RU)</th>
+                    <th className="border border-border p-3 text-left font-light">Длина стопы (см)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {SHOE_SIZE_TABLE.map((row) => (
+                    <tr key={row.ru} className="hover:bg-muted/10">
+                      <td className="border border-border p-3 font-medium">{row.ru}</td>
+                      <td className="border border-border p-3">{row.foot_cm}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
-        </ContentSection>
+          </ContentSection>
+
+          <ContentSection title="Как измерить">
+            <div className="space-y-4 text-muted-foreground leading-relaxed">
+              <p>
+                <strong className="text-foreground">Грудь:</strong> измеряется по самой выступающей точке, лента проходит горизонтально вокруг тела.
+              </p>
+              <p>
+                <strong className="text-foreground">Талия:</strong> измеряется по самому узкому месту, лента свободно прилегает.
+              </p>
+              <p>
+                <strong className="text-foreground">Бёдра:</strong> измеряется по самой широкой части, стоя с сомкнутыми ногами.
+              </p>
+              <p>
+                <strong className="text-foreground">Длина стопы:</strong> измеряется от пятки до кончика самого длинного пальца, стоя на твёрдой поверхности.
+              </p>
+            </div>
+          </ContentSection>
         </main>
       </div>
-      
+
       <Footer />
     </div>
   );

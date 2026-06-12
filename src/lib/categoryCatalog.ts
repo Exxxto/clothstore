@@ -5,9 +5,6 @@ import sweaterBeige from "@/assets/products/sweater-beige.jpg";
 import jeansBlue from "@/assets/products/jeans-blue.jpg";
 import bomberBlack from "@/assets/products/bomber-black.jpg";
 import sneakersWhite from "@/assets/products/sneakers-white.jpg";
-import linkBracelet from "@/assets/link-bracelet.png";
-import circularCollection from "@/assets/circular-collection.png";
-import organicEarring from "@/assets/organic-earring.png";
 import { CATEGORY_SLUGS } from "@/lib/categoryRoutes";
 
 export type CategoryCard = {
@@ -50,8 +47,6 @@ export const QUICK_CATEGORY_LINKS = [
   { label: "Детское", slug: CATEGORY_SLUGS.kids },
   { label: "Свитеры", slug: CATEGORY_SLUGS.sweaters },
   { label: "Новинки", slug: CATEGORY_SLUGS.new },
-  { label: "Браслеты", slug: CATEGORY_SLUGS.bracelets },
-  { label: "Колье", slug: CATEGORY_SLUGS.necklaces },
 ];
 
 export const EDITORIAL_CATEGORY_LINKS = [
@@ -72,26 +67,5 @@ export const EDITORIAL_CATEGORY_LINKS = [
     slug: CATEGORY_SLUGS.kids,
     image: heroKids,
     description: "Комфортные вещи для активного дня.",
-  },
-];
-
-export const JEWELRY_CATEGORY_LINKS = [
-  {
-    label: "Серьги",
-    slug: CATEGORY_SLUGS.earrings,
-    image: organicEarring,
-    description: "Скульптурные акценты и плавные формы.",
-  },
-  {
-    label: "Браслеты",
-    slug: CATEGORY_SLUGS.bracelets,
-    image: linkBracelet,
-    description: "Цепные формы и чистый металл.",
-  },
-  {
-    label: "Колье",
-    slug: CATEGORY_SLUGS.necklaces,
-    image: circularCollection,
-    description: "Лаконичные линии и круговые композиции.",
   },
 ];
