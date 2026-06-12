@@ -9,6 +9,7 @@ import { formatPrice, genderLabels, products, typeLabels } from "@/data/products
 import { normalizeGenderValue } from "@/lib/productNormalization";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCart } from "@/hooks/useCart";
+import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 
 const CLOTHING_CATEGORIES = [
   { label: "Куртки", slug: CATEGORY_SLUGS.jackets },
@@ -43,6 +44,7 @@ const Navigation = () => {
   const categoriesRef = useRef<HTMLDivElement>(null);
   const { favoriteCount } = useFavorites();
   const { cartItems, totalItems, updateQuantity } = useCart();
+  const { isAuthenticated, showAuthModal } = useCustomerAuth();
 
   useEffect(() => {
     if (!isSearchOpen) {
@@ -189,29 +191,58 @@ const Navigation = () => {
           >
             <Search size={20} strokeWidth={1.5} />
           </button>
-          <Link
-            to="/account?tab=favorites"
-            className="relative p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 rounded-full border border-transparent hover:border-border/70 hover:bg-background/70"
-            aria-label={`Избранное${favoriteCount > 0 ? `, ${favoriteCount} товаров` : ""}`}
-          >
-            <Heart
-              size={20}
-              strokeWidth={1.5}
-              className={favoriteCount > 0 ? "fill-current text-rose-500" : ""}
-            />
-            {favoriteCount > 0 && (
-              <span className="absolute right-0 top-0 inline-flex min-w-5 translate-x-1 -translate-y-1 items-center justify-center rounded-full border-2 border-background bg-rose-500 px-1 text-[10px] font-semibold leading-4 text-white">
-                {favoriteCount}
-              </span>
-            )}
-          </Link>
-          <Link
-            to="/account"
-            className="p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 rounded-full border border-transparent hover:border-border/70 hover:bg-background/70"
-            aria-label="Личный кабинет"
-          >
-            <UserRound size={20} strokeWidth={1.5} />
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              to="/account?tab=favorites"
+              className="relative p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 rounded-full border border-transparent hover:border-border/70 hover:bg-background/70"
+              aria-label={`Избранное${favoriteCount > 0 ? `, ${favoriteCount} товаров` : ""}`}
+            >
+              <Heart
+                size={20}
+                strokeWidth={1.5}
+                className={favoriteCount > 0 ? "fill-current text-rose-500" : ""}
+              />
+              {favoriteCount > 0 && (
+                <span className="absolute right-0 top-0 inline-flex min-w-5 translate-x-1 -translate-y-1 items-center justify-center rounded-full border-2 border-background bg-rose-500 px-1 text-[10px] font-semibold leading-4 text-white">
+                  {favoriteCount}
+                </span>
+              )}
+            </Link>
+          ) : (
+            <button
+              onClick={() => showAuthModal("/account?tab=favorites")}
+              className="relative p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 rounded-full border border-transparent hover:border-border/70 hover:bg-background/70"
+              aria-label="Избранное"
+            >
+              <Heart
+                size={20}
+                strokeWidth={1.5}
+                className={favoriteCount > 0 ? "fill-current text-rose-500" : ""}
+              />
+              {favoriteCount > 0 && (
+                <span className="absolute right-0 top-0 inline-flex min-w-5 translate-x-1 -translate-y-1 items-center justify-center rounded-full border-2 border-background bg-rose-500 px-1 text-[10px] font-semibold leading-4 text-white">
+                  {favoriteCount}
+                </span>
+              )}
+            </button>
+          )}
+          {isAuthenticated ? (
+            <Link
+              to="/account"
+              className="p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 rounded-full border border-transparent hover:border-border/70 hover:bg-background/70"
+              aria-label="Личный кабинет"
+            >
+              <UserRound size={20} strokeWidth={1.5} />
+            </Link>
+          ) : (
+            <button
+              onClick={() => showAuthModal("/account")}
+              className="p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 rounded-full border border-transparent hover:border-border/70 hover:bg-background/70"
+              aria-label="Войти"
+            >
+              <UserRound size={20} strokeWidth={1.5} />
+            </button>
+          )}
           <button
             className="p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 relative rounded-full border border-transparent hover:border-border/70 hover:bg-background/70"
             aria-label="Корзина"

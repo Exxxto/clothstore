@@ -9,6 +9,7 @@ import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import path from "path";
 import { login } from "./src/middleware/auth";
+import { customerLogin, customerRegister, customerMe } from "./src/middleware/customerAuth";
 import productsRouter from "./src/routes/products";
 import adminsRouter from "./src/routes/admins";
 import usersRouter from "./src/routes/users";
@@ -48,6 +49,11 @@ const loginRateLimiter = rateLimit({
 
 // Auth
 app.post("/api/auth/login", loginRateLimiter, login);
+
+// Customer auth
+app.post("/api/auth/customer/login", customerLogin);
+app.post("/api/auth/customer/register", customerRegister);
+app.get("/api/auth/customer/me", customerMe);
 
 // Resources
 app.use("/api/products", productsRouter);

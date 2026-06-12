@@ -29,6 +29,9 @@ import AdminInventory from "@/admin/pages/AdminInventory";
 import AdminPromoCodes from "@/admin/pages/AdminPromoCodes";
 import AdminCheckoutMethods from "@/admin/pages/AdminCheckoutMethods";
 import { useAuth } from "@/admin/useAuth";
+import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
+import AuthModal from "@/components/auth/AuthModal";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Complaints from "@/pages/Complaints";
 import SizeGuide from "@/pages/about/SizeGuide";
 import CustomerCare from "@/pages/about/CustomerCare";
@@ -41,6 +44,7 @@ const App = () => {
   const { isAuthenticated, username, fullName, role, login, logout } = useAuth();
 
   return (
+    <CustomerAuthProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
@@ -54,7 +58,11 @@ const App = () => {
             <Route path="/product/:productId" element={<ProductDetail />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/fitting-room" element={<FittingRoom />} />
-            <Route path="/account" element={<Account />} />
+            <Route path="/account" element={
+              <ProtectedRoute>
+                <Account />
+              </ProtectedRoute>
+            } />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/complaints" element={<Complaints />} />
             <Route path="/about/size-guide" element={<SizeGuide />} />
@@ -99,9 +107,11 @@ const App = () => {
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <AuthModal />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
+    </CustomerAuthProvider>
   );
 };
 

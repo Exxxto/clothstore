@@ -7,6 +7,7 @@ import path from "path";
 import swaggerUi from "swagger-ui-express";
 import { initDB } from "./src/db";
 import { login } from "./src/middleware/auth";
+import { customerLogin, customerRegister, customerMe } from "./src/middleware/customerAuth";
 import { swaggerSpec } from "./src/swagger";
 import logger from "./src/lib/logger";
 import httpLogger from "./src/middleware/httpLogger";
@@ -54,6 +55,11 @@ const loginRateLimiter = rateLimit({
 
 // Auth
 app.post("/api/auth/login", loginRateLimiter, login);
+
+// Customer auth
+app.post("/api/auth/customer/login", customerLogin);
+app.post("/api/auth/customer/register", customerRegister);
+app.get("/api/auth/customer/me", customerMe);
 
 // Resources
 app.use("/api/products", productsRouter);

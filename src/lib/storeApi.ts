@@ -442,6 +442,46 @@ export async function apiGetAccountCards() {
   return handleResponse<StoreSavedCard[]>(response);
 }
 
+// ── Customer Auth ──
+
+export type CustomerUser = {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone: string | null;
+};
+
+export async function apiCustomerLogin(email: string, password: string) {
+  const response = await fetch("/api/auth/customer/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password, session_id: getStoreSessionId() }),
+  });
+  return handleResponse<{ token: string; user: CustomerUser }>(response);
+}
+
+export async function apiCustomerRegister(data: {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+}) {
+  const response = await fetch("/api/auth/customer/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...data, session_id: getStoreSessionId() }),
+  });
+  return handleResponse<{ token: string; user: CustomerUser }>(response);
+}
+
+export async function apiCustomerMe(token: string) {
+  const response = await fetch("/api/auth/customer/me", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse<CustomerUser>(response);
+}
+
 export async function apiAddAccountCard(data: StoreSavedCardPayload) {
   const response = await fetch("/api/store/account/cards", {
     method: "POST",

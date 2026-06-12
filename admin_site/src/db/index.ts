@@ -543,6 +543,14 @@ export async function initDB() {
     `);
 
     await client.query(`
+      ALTER TABLE store_profiles ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL
+    `);
+
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS store_profiles_user_id_idx ON store_profiles(user_id) WHERE user_id IS NOT NULL
+    `);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS promo_codes (
         id SERIAL PRIMARY KEY,
         code VARCHAR(80) NOT NULL UNIQUE,
